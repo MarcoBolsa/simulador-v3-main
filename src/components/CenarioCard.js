@@ -104,8 +104,7 @@ export const CenarioCard = ({ cenario }) => {
       )}
 
       <div className="flex flex-col sm:flex-row justify-between gap-2">
-        <button className="text-sm btn-secondary flex-1">Editar Nome</button>
-        
+        {/* EDITAR NOME REMOVIDO PARA SIMPLIFICAR A UI (V3.26.8) */}
         {/* BOTÃO EDITAR CONECTADO */}
         <button 
           onClick={() => editarCenario(cenario.id)} 
