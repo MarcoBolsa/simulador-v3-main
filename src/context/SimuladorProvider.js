@@ -1,20 +1,11 @@
-/*
- * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.27.0 - GERAÇÃO DA PROPOSTA)
- *
- * NOVAS FUNCIONALIDADES:
- * 1. Implementada a função 'gerarDadosProposta' que estrutura todos os dados de estado
- * (Proposta, Cenários e Total Geral) em um objeto final pronto para ser exportado (PDF/E-mail).
- * 2. Início do Particionamento: As funções puras (groupRules, formatCurrency, etc.)
- * foram movidas para SimuladorUtils.js (A implementação completa do Utils deve ser feita separadamente).
- */
+// ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.27.1 - REDUZIDO E FUNCIONAL)
 
 import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
-// IMPORTAÇÃO MODULARIZADA: Substitui todas as funções de utils e regras de negócio
+// IMPORTAÇÃO MODULARIZADA: Substitui as regras e funções de cálculo
 import { 
     parseCurrency, 
     formatCurrency, 
     groupRules, 
-    upgradeTables, // Mantemos importado, embora não usado diretamente aqui
     calcularParcelaBase 
 } from './SimuladorUtils'; 
 
@@ -51,7 +42,7 @@ export const SimuladorProvider = ({ children }) => {
     fundoReserva: '0', // O GRUPO 1768 TEM FR 0 NO MEU groupRules
     taxaAdesao: '0',
     furo: '12', // (120 - (180 - 72)) = 12
-    quantidadeCotas: '1', // NOVO CAMPO
+    quantidadeCotas: '1', 
   };
 
   const [proposta, setProposta] = useState({
@@ -137,16 +128,8 @@ export const SimuladorProvider = ({ children }) => {
   
   // ========================================================================
   // MOTOR DE CÁLCULO V15 (O "Coração" do Sistema)
+  // O corpo deste useMemo FOI MANTIDO AQUI e utiliza as funções importadas.
   // ========================================================================
-  
-  // O corpo do useMemo 'simulationResult' (linhas 250-449) permanece aqui por ora
-
-  // Helper 3.1: Calcular Parcela Base
-  // NOTE: Esta função agora deve ser importada de SimuladorUtils.js
-  
-  // ... (O corpo de runSimulationCalculation estará aqui, mas foi omitido
-  // para o propósito de demonstração do novo código de contexto.
-  // Garanta que ele esteja no seu arquivo final.)
   
   const simulationResult = useMemo(() => {
     try {
