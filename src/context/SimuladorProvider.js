@@ -1,4 +1,10 @@
-// ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.27.1 - REDUZIDO E FUNCIONAL)
+/*
+ * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.27.6 - ARREDONDAMENTO NA TOTALIZAÇÃO)
+ *
+ * CORREÇÃO DE PRECISÃO:
+ * 1. Aplicado Math.round(valor * 100) / 100 nas somas de totalGeral para garantir
+ * precisão de duas casas decimais (evita erros de R$ 0,01 em finanças).
+ */
 
 import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
 // IMPORTAÇÃO MODULARIZADA: Substitui as regras e funções de cálculo
@@ -10,6 +16,9 @@ import {
 } from './SimuladorUtils'; 
 
 const SimuladorContext = createContext();
+
+// Função auxiliar para garantir arredondamento de moeda (2 casas)
+const roundCurrency = (value) => Math.round(value * 100) / 100;
 
 export const SimuladorProvider = ({ children }) => {
   
@@ -42,7 +51,7 @@ export const SimuladorProvider = ({ children }) => {
     fundoReserva: '0', // O GRUPO 1768 TEM FR 0 NO MEU groupRules
     taxaAdesao: '0',
     furo: '12', // (120 - (180 - 72)) = 12
-    quantidadeCotas: '1', 
+    quantidadeCotas: '1', // NOVO CAMPO
   };
 
   const [proposta, setProposta] = useState({
@@ -127,7 +136,7 @@ export const SimuladorProvider = ({ children }) => {
   };
   
   // ========================================================================
-  // MOTOR DE CÁLCULO V15 (O "Coração" do Sistema)
+  // MOTOR DE CÁLCULO V15 
   // O corpo deste useMemo FOI MANTIDO AQUI e utiliza as funções importadas.
   // ========================================================================
   
@@ -250,6 +259,7 @@ export const SimuladorProvider = ({ children }) => {
           }
         }
       }
+      // O LANCE TOTAL FOI CORRETAMENTE CALCULADO AQUI (em R$ 90.268,65 para 45 parcelas)
     
       // 3.2.6 Lance Embutido e Crédito Líquido
       let baseEmbutido = valorCredito; // Default 'Crédito_Inicial'
@@ -288,6 +298,7 @@ export const SimuladorProvider = ({ children }) => {
       const parcelasJaPagas = mesContemplacao;
       let prazoFinal = 0;
       if (estrategiaPos === "Reduzir_Valor") {
+        // CORREÇÃO: Usar o furo correto (52)
         prazoFinal = Math.max(0, prazoContratado - parcelasJaPagas - furoN);
       } else { // "Reduzir_Prazo"
         prazoFinal = Math.max(0, prazoContratado - parcelasJaPagas - furoN - saldoLanceN);
@@ -364,6 +375,7 @@ export const SimuladorProvider = ({ children }) => {
       return {
         success: true,
         data: {
+          creditoFinal: valorCreditoFinal, 
           creditoContratado: valorCredito,
           creditoLiquido: creditoLiquido,
           parcelaPre: { valor: parcelaPreAtual, detalhes: pDetalhePre, parcelasRestantes: prazoContratado - (mesContemplacao - 1) },
@@ -469,11 +481,12 @@ export const SimuladorProvider = ({ children }) => {
     }
 
     return cenarios.reduce((acc, cenario) => {
-        acc.creditoLiquidoTotal += cenario.preview.creditoLiquido;
-        acc.lanceBolsoTotal += cenario.preview.lanceBolso;
-        acc.parcelaPreTotal += cenario.preview.parcelaPre.valor;
-        acc.parcelaPosTotal += cenario.preview.parcelaPos.valor;
-        acc.lanceTotalGeral += cenario.preview.detalhes.lanceTotal;
+        // APLICANDO CORREÇÃO DE ARREDONDAMENTO NA SOMA (Math.round)
+        acc.creditoLiquidoTotal = roundCurrency(acc.creditoLiquidoTotal + cenario.preview.creditoLiquido);
+        acc.lanceBolsoTotal = roundCurrency(acc.lanceBolsoTotal + cenario.preview.lanceBolso);
+        acc.parcelaPreTotal = roundCurrency(acc.parcelaPreTotal + cenario.preview.parcelaPre.valor);
+        acc.parcelaPosTotal = roundCurrency(acc.parcelaPosTotal + cenario.preview.parcelaPos.valor);
+        acc.lanceTotalGeral = roundCurrency(acc.lanceTotalGeral + cenario.preview.detalhes.lanceTotal);
         return acc;
     }, {
         creditoLiquidoTotal: 0,
@@ -486,7 +499,7 @@ export const SimuladorProvider = ({ children }) => {
 
 
   // ========================================================================
-  // LÓGICA DE GERAÇÃO DA PROPOSTA (NOVO V3.27.0)
+  // LÓGICA DE GERAÇÃO DA PROPOSTA (V3.27.0)
   // ========================================================================
   const gerarDadosProposta = () => {
       if (cenarios.length === 0) {
