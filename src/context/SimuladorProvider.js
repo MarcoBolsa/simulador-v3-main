@@ -1,9 +1,15 @@
 /*
- * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.6 - FUNÇÕES DE GERENCIAMENTO DE CENÁRIO)
+ * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.8 - FINAL DE CORREÇÕES E FUNÇÕES DE GERENCIAMENTO)
  *
  * NOVAS FUNCIONALIDADES:
- * 1. Implementado Duplicar e Editar (carrega o formulário e remove o original).
- * 2. Adicionado 'creditoUnitario' na simulação para melhorar a exibição de multi-cotas.
+ * 1. Implementado Duplicar e Editar (carrega o formulário sem excluir o original).
+ * 2. Adicionado 'quantidadeCotas' e 'creditoUnitario' para suporte multi-cotas.
+ *
+ * CORREÇÕES DE BUG:
+ * - V3.26.4: Corrigida a desestruturação e uso da variável 'valorUpgrade'.
+ * - V3.26.3: Corrigido erro de sintaxe 'lanceEm Parcelas'.
+ * - V3.26.2: Corrigida a referência de função getParcelas para calcularParcelaBase (crash).
+ * - V3.26.1: Corrigida a desestruturação de 'planoPagamento' para 'tipoPlano'.
  */
 
 import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
@@ -568,8 +574,8 @@ export const SimuladorProvider = ({ children }) => {
     const cenario = cenarios.find(c => c.id === idParaEditar);
     if (cenario) {
       setForm({ ...cenario.inputs });
-      // Remove o cenário original, pois a intenção é geralmente substituí-lo
-      removerCenario(idParaEditar);
+      // CORRIGIDO V3.26.8: Não removemos o card, o usuário deve substituir ou remover manualmente
+      // removerCenario(idParaEditar); 
     } else {
       setErrorMessage("Cenário não encontrado para edição.");
     }
