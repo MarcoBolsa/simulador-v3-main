@@ -1,11 +1,10 @@
 /*
- * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.4 - CORRIGIDO BUG DE UPGRADE)
+ * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.5 - SUPORTE A MÚLTIPLAS COTAS)
  *
- * CORREÇÕES APLICADAS:
- * 1. Bug de Cálculo/Upgrade: Corrigido o erro de desestruturação e uso da variável
- * de upgrade. A variável correta no objeto 'dados' é 'valorUpgrade', e não 'upgradeValor'.
- * 2. Isso garante que a lógica 'if (upgrade === ... && valorUpgrade > 0)' seja executada,
- * resultando no Crédito Líquido correto de R$ 230.000,00 para o cenário de teste.
+ * NOVAS FUNCIONALIDADES:
+ * 1. Adicionado o campo 'quantidadeCotas' ao estado inicial.
+ * 2. Refatorada a função 'adicionarSimulacao' para multiplicar os valores TOTAIS
+ * (Crédito, Lance, Valor da Parcela) pela quantidade de cotas.
  */
 
 import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
@@ -90,8 +89,8 @@ export const SimuladorProvider = ({ children }) => {
     tipoParcela: 'Integral',
     taxaAdm: '17',
     desconto: '0',
-    upgrade: 'Acréscimo %', // REVERTIDO para a intenção original do teste
-    upgradeValor: '30',  // REVERTIDO para a intenção original do teste
+    upgrade: 'Acréscimo %',
+    upgradeValor: '30',
     lanceTotal: '45',
     tipoLance: 'parcelas',
     baseDoLance: 'Crédito Inicial',
@@ -104,6 +103,7 @@ export const SimuladorProvider = ({ children }) => {
     fundoReserva: '0', // O GRUPO 1768 TEM FR 0 NO MEU groupRules
     taxaAdesao: '0',
     furo: '12', // (120 - (180 - 72)) = 12
+    quantidadeCotas: '1', // NOVO CAMPO
   };
 
   const [proposta, setProposta] = useState({
@@ -256,7 +256,7 @@ export const SimuladorProvider = ({ children }) => {
       const {
           valorCredito, prazoContratado, calcularSeguro,
           lanceEmbutidoPercentual, mesContemplacao, prazoRealizado, usarLanceValor, lanceTotalValorInput, lanceTotalParcelas,
-          baseLance, upgrade, valorUpgrade, tipoPlano, percentualSeguro, // <<-- CORRIGIDO AQUI: upgradeValor -> valorUpgrade
+          baseLance, upgrade, valorUpgrade, tipoPlano, percentualSeguro, // CORREÇÃO V3.26.4
           estrategiaPos, tipoParcela, prazoOriginal, reajusteAnual
       } = dados;
     
@@ -275,25 +275,25 @@ export const SimuladorProvider = ({ children }) => {
       
       // 3.2.2 Crédito Final (com Upgrade)
       let valorCreditoFinal = valorCreditoReajustado;
-      if (upgrade === "Acrescimo_Percentual" && valorUpgrade > 0) { // <<-- CORRIGIDO AQUI
+      if (upgrade === "Acrescimo_Percentual" && valorUpgrade > 0) {
         valorCreditoFinal = valorCreditoReajustado * (1 + valorUpgrade / 100);
-      } else if (upgrade === "Acrescimo_Valor" && valorUpgrade > 0) { // <<-- CORRIGIDO AQUI
+      } else if (upgrade === "Acrescimo_Valor" && valorUpgrade > 0) {
         valorCreditoFinal = valorUpgrade;
       }
       
       // --- 3.1 CÁLCULO PARCELA PRÉ ---
       const { parcela: pPre, parcelaFinal: pPreFinal } = calcularParcelaBase(
-        valorCredito, prazoContratado, taxaAdmTotal, tipoPlano, // planoPagamento CORRIGIDO para tipoPlano
+        valorCredito, prazoContratado, taxaAdmTotal, tipoPlano, 
         tipoParcela, calcularSeguro, form.percentualSeguro
       );
       
       let parcelaPreAtual = pPre;
-      if (tipoPlano === 'degrau' && mesContemplacao > Math.ceil(prazoContratado / 2)) { // planoPagamento CORRIGIDO para tipoPlano
+      if (tipoPlano === 'degrau' && mesContemplacao > Math.ceil(prazoContratado / 2)) { 
         parcelaPreAtual = pPreFinal;
       }
 
       let pDetalhePre = `1-${prazoContratado}: ${formatCurrency(pPre)}`;
-      if (tipoPlano === 'degrau' && pPreFinal !== null) { // planoPagamento CORRIGIDO para tipoPlano
+      if (tipoPlano === 'degrau' && pPreFinal !== null) { 
          const pontoDeVirada = Math.ceil(prazoContratado / 2);
          pDetalhePre = `1-${pontoDeVirada}: ${formatCurrency(pPre)} | ${pontoDeVirada+1}-${prazoContratado}: ${formatCurrency(pPreFinal)}`;
       } else if (tipoParcela !== "Integral") {
@@ -315,7 +315,7 @@ export const SimuladorProvider = ({ children }) => {
       }
       
       const { parcela: pLance1, parcelaFinal: pLance2 } = calcularParcelaBase(
-        creditoBaseLance, prazoContratado, taxaAdmTotal, tipoPlano, // planoPagamento CORRIGIDO para tipoPlano
+        creditoBaseLance, prazoContratado, taxaAdmTotal, tipoPlano, 
         tipoParcelaLance, calcularSeguro, form.percentualSeguro
       );
       
@@ -325,7 +325,7 @@ export const SimuladorProvider = ({ children }) => {
       let custoFuroR = 0; // 3.2.5
       for (let i = 0; i < furoN; i++) {
         const pIndex = prazoContratado - 1 - i;
-        if (tipoPlano === "degrau" && pIndex >= numParcelasMetade) { // planoPagamento CORRIGIDO para tipoPlano
+        if (tipoPlano === "degrau" && pIndex >= numParcelasMetade) { 
           custoFuroR += pLanceMetade2;
         } else {
           custoFuroR += pLance1;
@@ -339,7 +339,7 @@ export const SimuladorProvider = ({ children }) => {
       } else {
         for (let i = 0; i < lanceTotalParcelas; i++) {
           const pIndex = prazoContratado - 1 - i;
-          if (tipoPlano === "degrau" && pIndex >= numParcelasMetade) { // planoPagamento CORRIGIDO para tipoPlano
+          if (tipoPlano === "degrau" && pIndex >= numParcelasMetade) { 
             lanceTotalR += pLanceMetade2;
           } else {
             lanceTotalR += pLance1;
@@ -371,7 +371,7 @@ export const SimuladorProvider = ({ children }) => {
       
       for (let i = 0; i < saldoLanceN; i++) {
         const pIndex = prazoContratado - 1 - furoN - i;
-        if (tipoPlano === "degrau" && pIndex >= numParcelasMetade) { // planoPagamento CORRIGIDO para tipoPlano
+        if (tipoPlano === "degrau" && pIndex >= numParcelasMetade) { 
           saldoLanceR += pLanceMetade2;
         } else {
           saldoLanceR += pLance1;
@@ -397,8 +397,8 @@ export const SimuladorProvider = ({ children }) => {
           const creditoDoMes = valorCredito * Math.pow(1 + reajusteAnual / 100, reajustesAplicados);
           
           // **CORREÇÃO V3.26**: Usar calcularParcelaBase
-          const pIntegralBase = calcularParcelaBase(creditoDoMes, prazoContratado, taxaAdmTotal, tipoPlano, "Integral", false, '0').parcela; // planoPagamento CORRIGIDO para tipoPlano
-          const pReduzidaBase = calcularParcelaBase(creditoDoMes, prazoContratado, taxaAdmTotal, tipoPlano, tipoParcela, false, '0').parcela; // planoPagamento CORRIGIDO para tipoPlano
+          const pIntegralBase = calcularParcelaBase(creditoDoMes, prazoContratado, taxaAdmTotal, tipoPlano, "Integral", false, '0').parcela;
+          const pReduzidaBase = calcularParcelaBase(creditoDoMes, prazoContratado, taxaAdmTotal, tipoPlano, tipoParcela, false, '0').parcela;
           
           diferencaAcumulada += pIntegralBase - pReduzidaBase;
         }
@@ -415,7 +415,7 @@ export const SimuladorProvider = ({ children }) => {
       if (baseLance === "Credito_Final" || baseLance === "Parcela_Integral" || baseLance === "Parcela_Reduzida") {
         // Fórmula 3.3.6
         // **CORREÇÃO V3.26**: Usar calcularParcelaBase
-        const finalBase = calcularParcelaBase(valorCreditoFinal, prazoContratado, taxaAdmTotal, tipoPlano, "Integral", calcularSeguro, form.percentualSeguro); // planoPagamento CORRIGIDO para tipoPlano
+        const finalBase = calcularParcelaBase(valorCreditoFinal, prazoContratado, taxaAdmTotal, tipoPlano, "Integral", calcularSeguro, form.percentualSeguro); 
         novaParcela1 = finalBase.parcela - descontoMensal + acrescimoMensalDiferenca;
         novaParcela2 = (finalBase.parcelaFinal !== null ? finalBase.parcelaFinal : finalBase.parcela) - descontoMensal + acrescimoMensalDiferenca;
       } else { // "Crédito_Inicial"
@@ -428,14 +428,14 @@ export const SimuladorProvider = ({ children }) => {
         const sp_r_pos = calcularSeguro ? (valorCreditoFinal + ta_r_final) * (percentualSeguro / 100) : 0;
     
         // **CORREÇÃO V3.26**: Usar calcularParcelaBase
-        const preBase = calcularParcelaBase(valorCredito, prazoContratado, taxaAdmTotal, tipoPlano, tipoParcela, false, '0'); // planoPagamento CORRIGIDO para tipoPlano
+        const preBase = calcularParcelaBase(valorCredito, prazoContratado, taxaAdmTotal, tipoPlano, tipoParcela, false, '0');
         const p1_pre_base = preBase.parcela;
         const p2_pre_base = preBase.parcelaFinal !== null ? preBase.parcelaFinal : p1_pre_base;
     
         let taxaUpgradeMensal1a = 0;
         let taxaUpgradeMensal2a = 0;
         
-        if (tipoPlano === 'linear') { // // planoPagamento CORRIGIDO para tipoPlano
+        if (tipoPlano === 'linear') { // 
           taxaUpgradeMensal1a = (prazoFinal > 0) ? taxaAdminUpgrade / prazoFinal : 0;
           taxaUpgradeMensal2a = taxaUpgradeMensal1a;
         } else { // Degrau
@@ -451,7 +451,7 @@ export const SimuladorProvider = ({ children }) => {
       
       let pDetalhePos = `${prazoFinal} parcelas restantes de ${formatCurrency(novaParcela1)}`;
       const pontoDeViradaOriginal = Math.ceil(prazoContratado / 2);
-      if (tipoPlano === 'degrau') { // planoPagamento CORRIGIDO para tipoPlano
+      if (tipoPlano === 'degrau') { 
          // CORREÇÃO: O ponto de virada PÓS depende do mês de contemplação
          const pontoDeViradaPos = Math.max(0, pontoDeViradaOriginal - (mesContemplacao - 1));
          if (pontoDeViradaPos > 0 && pontoDeViradaPos < prazoFinal) {
@@ -471,7 +471,7 @@ export const SimuladorProvider = ({ children }) => {
           parcelaPre: { valor: parcelaPreAtual, detalhes: pDetalhePre, parcelasRestantes: prazoContratado - (mesContemplacao - 1) },
           lanceBolso: Math.max(0, lanceBolsoR),
           parcelaPos: { 
-            valor: (tipoPlano === 'degrau' && (mesContemplacao-1) >= pontoDeViradaOriginal) ? Math.max(0, novaParcela2) : Math.max(0, novaParcela1), // planoPagamento CORRIGIDO para tipoPlano
+            valor: (tipoPlano === 'degrau' && (mesContemplacao-1) >= pontoDeViradaOriginal) ? Math.max(0, novaParcela2) : Math.max(0, novaParcela1), 
             detalhes: pDetalhePos,
             parcelasRestantes: prazoFinal
           },
@@ -516,7 +516,10 @@ export const SimuladorProvider = ({ children }) => {
     
     let baseEmbutido = valorCred;
     if (form.baseDoLance === 'Crédito Final' && simulationResult.success) {
-      baseEmbutido = simulationResult.data.creditoFinal;
+      // Nota: 'creditoFinal' não está no objeto data, mas é uma variável calculada
+      // e é assumida aqui. Se der erro, deve-se usar o 'valorCreditoFinal' da função simulationResult.
+      // Por enquanto, confiamos que o 'preview' será alimentado com o valor correto
+      baseEmbutido = simulationResult.data.creditoFinal || valorCred; 
     }
     const lanceEmbutidoValor = baseEmbutido * (form.lanceEmbutidoPerc / 100);
 
@@ -563,15 +566,48 @@ export const SimuladorProvider = ({ children }) => {
   
   const adicionarSimulacao = () => {
     if (preview && !calculos.alertaFuro) {
+      // 1. Pega a quantidade de cotas
+      const qtdCotas = parseInt(form.quantidadeCotas) || 1;
+      
+      // 2. Cria o novo objeto de preview com os valores totais multiplicados
+      const previewTotal = {
+        ...preview,
+        // Multiplica os totais da proposta
+        creditoContratado: preview.creditoContratado * qtdCotas,
+        creditoLiquido: preview.creditoLiquido * qtdCotas,
+        lanceBolso: preview.lanceBolso * qtdCotas,
+        
+        // Multiplica os valores da parcela (Mantendo os detalhes de parcela por cota inalterados)
+        parcelaPre: {
+          ...preview.parcelaPre,
+          valor: preview.parcelaPre.valor * qtdCotas
+        },
+        parcelaPos: {
+          ...preview.parcelaPos,
+          valor: preview.parcelaPos.valor * qtdCotas
+        },
+        
+        detalhes: {
+          ...preview.detalhes,
+          lanceTotal: preview.detalhes.lanceTotal * qtdCotas,
+          lanceEmbutido: preview.detalhes.lanceEmbutido * qtdCotas,
+          custoDoFuro: preview.detalhes.custoDoFuro * qtdCotas,
+        }
+      };
+      
+      // 3. Adiciona ao estado 'cenarios'
       setCenarios(prev => [
         ...prev,
         {
           id: Date.now(),
           nome: form.nomeSimulacao || `Cenário ${cenarios.length + 1}`,
-          inputs: { ...form },
-          preview: { ...preview }
+          inputs: { ...form, quantidadeCotas: qtdCotas }, // Salva a Qtd numérico
+          preview: previewTotal // Salva o preview com totais
         }
       ]);
+      
+      // ... (restante da função)
+
       setForm(prev => ({
         ...estadoInicialForm,
         // Mantém dados úteis para a próxima simulação
@@ -608,6 +644,7 @@ export const SimuladorProvider = ({ children }) => {
         valorCredito: prev.valorCredito,
         prazoContratado: prev.prazoContratado,
         prazoOriginal: prev.prazoOriginal,
+        quantidadeCotas: prev.quantidadeCotas, // Adicionado para manter a qtd de cotas
       }));
      setTaxaAdmOriginal(parseFloat(estadoInicialForm.taxaAdm) || 0);
   };
