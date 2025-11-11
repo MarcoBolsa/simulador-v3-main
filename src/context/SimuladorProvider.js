@@ -1,10 +1,9 @@
 /*
- * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.1 - CORRIGIDA DADOS INICIAIS)
+ * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.2 - CORRIGIDA SINTAXE)
  *
  * CORREÇÃO APLICADA:
- * 1. Bug de Cálculo/Display: Ajustado o estadoInicialForm (upgrade e upgradeValor)
- * para que o Crédito Líquido inicial seja R$ 161.000,00 (R$ 230.000,00 - 30% Lance Embutido),
- * conforme o preview fornecido. A lógica do motor V3.26 permanece correta e intacta.
+ * 1. Bug de Build: Corrigido erro de sintaxe "Missing initializer in const declaration"
+ * removendo o espaço indevido na variável 'lanceEm Parcelas'.
  */
 
 import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
@@ -522,7 +521,7 @@ export const SimuladorProvider = ({ children }) => {
     // Validação de Furo
     let alertaFuro = '';
     const furoEmParcelas = furoCalculado;
-    const lanceEm Parcelas = parseFloat(form.lanceTotal) || 0;
+    const lanceEmParcelas = parseFloat(form.lanceTotal) || 0; // CORRIGIDO: Removido o espaço 'Em Parcelas'
     
     if (form.tipoLance === 'parcelas' && lanceEmParcelas < furoEmParcelas) {
       alertaFuro = 'ATENÇÃO: Lance (em parcelas) menor que o furo!';
