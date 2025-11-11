@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    font-family: 'Inter', sans-serif;
+    @apply bg-gradient-to-b from-gray-50 to-gray-200;
+}
+
+@layer components {
+    /* Estilo base para inputs e selects */
+    .form-input {
+        @apply w-full rounded-lg border-gray-300 shadow-sm transition duration-150 ease-in-out;
+        @apply focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50;
+    }
+    .form-checkbox {
+         @apply rounded text-blue-600 border-gray-300 shadow-sm;
+         @apply focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50;
+    }
+    input[type=range] {
+        @apply w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: #2563EB; /* Azul */
+        cursor: pointer;
+        border-radius: 50%;
+    }
+
+    /* Botões Padrão */
+    .btn {
+        @apply py-2 px-5 rounded-lg font-medium transition duration-150 ease-in-out shadow-sm;
+        @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    }
+    .btn-primary {
+        @apply btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+        @apply disabled:bg-gray-400 disabled:cursor-not-allowed;
+    }
+    .btn-secondary {
+         @apply btn bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-blue-500;
+    }
+     .btn-danger {
+         @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+    }
+}
