@@ -1,5 +1,5 @@
 /*
- * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.9 - TOTALIZAÇÃO GLOBAL)
+ * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.10 - TOTALIZAÇÃO GLOBAL IMPLEMENTADA)
  *
  * NOVAS FUNCIONALIDADES:
  * 1. Implementado o cálculo de 'totalGeral' usando useMemo, somando os principais
