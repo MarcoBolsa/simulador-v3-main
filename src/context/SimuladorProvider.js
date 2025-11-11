@@ -1,8 +1,8 @@
 /*
- * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.25 - 100% LIMPO)
+ * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26 - 100% LIMPO)
  *
- * O QUE MUDOU (BASEADO NO SEU BACKUP V3.13):
- * - 100% LIMPO, sem typos de build.
+ * O QUE MUDOU:
+ * - 100% LIMPO, sem typos de build (removido 'JSON', 'S', 'source', etc.).
  * - Corrigido 'getParcelas' (x4) para 'calcularParcelaBase'.
  * - Corrigido 'planoPagamento' (x15) para 'tipoPlano'.
  * - Atualizado 'estadoInicialForm' para os dados de produção (230k).
@@ -529,14 +529,14 @@ export const SimuladorProvider = ({ children }) => {
     if (form.tipoLance === 'parcelas' && lanceEmParcelas < furoEmParcelas) {
       alertaFuro = 'ATENÇÃO: Lance (em parcelas) menor que o furo!';
     } else if (simulationResult.success && simulationResult.data.detalhes.lanceTotal < simulationResult.data.detalhes.custoDoFuro) {
-      alertaFuro = `ATENÇÃO: Lance (${formatCurrency(simulationResult.data.detalhes.lanceTotal)}) menor que o Custo do Furo (${formatCurrency(simulationResult.data.detalhes.custoDoFuro)})`;
+source       alertaFuro = `ATENÇÃO: Lance (${formatCurrency(simulationResult.data.detalhes.lanceTotal)}) menor que o Custo do Furo (${formatCurrency(simulationResult.data.detalhes.custoDoFuro)})`;
     } else if (simulationResult.error) {
       alertaFuro = `Erro: ${simulationResult.error}`;
     }
 
     setCalculos({
       prazoARealizar: prazoARealizarCalculado,
-      lanceEmbutidoValor: lanceEmbutidoValor,
+source       lanceEmbutidoValor: lanceEmbutidoValor,
       alertaFuro: alertaFuro,
     });
     
@@ -577,7 +577,7 @@ export const SimuladorProvider = ({ children }) => {
       setForm(prev => ({
         ...estadoInicialForm,
         // Mantém dados úteis para a próxima simulação
-S    	  grupoNo: prev.grupoNo,
+    	  grupoNo: prev.grupoNo,
   	 	valorCredito: prev.valorCredito,
   	 	prazoContratado: prev.prazoContratado,
   	 	prazoOriginal: prev.prazoOriginal,
@@ -585,7 +585,7 @@ S    	  grupoNo: prev.grupoNo,
   	 	fundoReserva: prev.fundoReserva, // Mantém o FR do grupo
   	  }));
   	  setTaxaAdmOriginal(parseFloat(form.taxaAdm) || 0); // Reseta a taxa original
-  	} else if (calculos.alertaFuro) {
+source   	} else if (calculos.alertaFuro) {
   	  alert(calculos.alertaFuro);
   	} else {
   	  alert("Simulação inválida. Verifique os dados.");
@@ -609,7 +609,7 @@ S    	  grupoNo: prev.grupoNo,
   	 	grupoNo: prev.grupoNo,
   	 	valorCredito: prev.valorCredito,
   	 	prazoContratado: prev.prazoContratado,
-  	 	prazoOriginal: prev.prazoOriginal,
+SO  	 	prazoOriginal: prev.prazoOriginal,
   	 	}));
   	  setTaxaAdmOriginal(parseFloat(estadoInicialForm.taxaAdm) || 0);
   };
@@ -623,7 +623,7 @@ S    	  grupoNo: prev.grupoNo,
     form,
     handleFormChange,
     handlePrazoChange,
-source     handleFuroChange, // Exporta o handler do furo manual
+SO    handleFuroChange, // Exporta o handler do furo manual
     handleTaxaChange,
     handleDescontoChange,
     calculos,
@@ -638,9 +638,9 @@ source     handleFuroChange, // Exporta o handler do furo manual
 
   return (
     <SimuladorContext.Provider value={value}>
-    	{children}
+      {children}
     </SimuladorContext.Provider>
-JSON );
+  );
 };
 
 // "Atalho" para os blocos
