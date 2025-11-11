@@ -1,10 +1,11 @@
 /*
- * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.3 - DADOS INICIAIS REVERTIDOS)
+ * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.4 - CORRIGIDO BUG DE UPGRADE)
  *
- * CORREÇÃO APLICADA:
- * 1. Revertido o estadoInicialForm para o cenário de teste original. O Upgrade de 30% está ativo.
- * Isto faz com que o Crédito Líquido calculado retorne ao valor LOGICAMENTE CORRETO de R$ 230.000,00
- * (R$ 299.000,00 - R$ 69.000,00), restaurando a intenção de teste do Arquiteto de Software.
+ * CORREÇÕES APLICADAS:
+ * 1. Bug de Cálculo/Upgrade: Corrigido o erro de desestruturação e uso da variável
+ * de upgrade. A variável correta no objeto 'dados' é 'valorUpgrade', e não 'upgradeValor'.
+ * 2. Isso garante que a lógica 'if (upgrade === ... && valorUpgrade > 0)' seja executada,
+ * resultando no Crédito Líquido correto de R$ 230.000,00 para o cenário de teste.
  */
 
 import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
@@ -255,7 +256,7 @@ export const SimuladorProvider = ({ children }) => {
       const {
           valorCredito, prazoContratado, calcularSeguro,
           lanceEmbutidoPercentual, mesContemplacao, prazoRealizado, usarLanceValor, lanceTotalValorInput, lanceTotalParcelas,
-          baseLance, upgrade, upgradeValor, tipoPlano, percentualSeguro, // planoPagamento CORRIGIDO para tipoPlano
+          baseLance, upgrade, valorUpgrade, tipoPlano, percentualSeguro, // <<-- CORRIGIDO AQUI: upgradeValor -> valorUpgrade
           estrategiaPos, tipoParcela, prazoOriginal, reajusteAnual
       } = dados;
     
@@ -274,10 +275,10 @@ export const SimuladorProvider = ({ children }) => {
       
       // 3.2.2 Crédito Final (com Upgrade)
       let valorCreditoFinal = valorCreditoReajustado;
-      if (upgrade === "Acrescimo_Percentual" && upgradeValor > 0) {
-        valorCreditoFinal = valorCreditoReajustado * (1 + upgradeValor / 100);
-      } else if (upgrade === "Acrescimo_Valor" && upgradeValor > 0) {
-        valorCreditoFinal = upgradeValor;
+      if (upgrade === "Acrescimo_Percentual" && valorUpgrade > 0) { // <<-- CORRIGIDO AQUI
+        valorCreditoFinal = valorCreditoReajustado * (1 + valorUpgrade / 100);
+      } else if (upgrade === "Acrescimo_Valor" && valorUpgrade > 0) { // <<-- CORRIGIDO AQUI
+        valorCreditoFinal = valorUpgrade;
       }
       
       // --- 3.1 CÁLCULO PARCELA PRÉ ---
