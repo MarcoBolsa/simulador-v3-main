@@ -1,21 +1,21 @@
 /*
- * ARQUIVO: /src/components/AdicionarSimulacao.js (VERSÃO 3.27.4 - RESTAURAÇÃO DE RENDERIZAÇÃO)
+ * ARQUIVO: /src/components/AdicionarSimulacao.js (V3.27.5 - CHAMADA DE IMPRESSÃO AJUSTADA)
  *
  * CORREÇÃO:
- * 1. Removida a lógica condicional 'if (isPrinting)' do retorno principal, que estava
- * causando a quebra de toda a renderização do formulário.
- * 2. O componente PropostaPDF foi mantido para ser usado em um componente pai (root).
- * 3. A estrutura do formulário foi restaurada dentro do <Accordion>.
+ * - A lógica de renderização condicional 'if (isPrinting)' foi removida do retorno principal.
+ * - O handler 'handlePrint' foi ajustado para chamar uma função global (window.handleGlobalPrint),
+ * que deve estar definida no App.js para lidar com o processo de renderização e impressão.
  *
- * NOVAS FUNCIONALIDADES (Mantidas):
- * 1. Modal de Exportação.
- * 2. Botão 'Gerar Proposta' funcional.
+ * FUNCIONALIDADES:
+ * - Formulário completo com Preview.
+ * - Modal de Exportação.
+ * - Botão 'Gerar Proposta' funcional, pronto para o App.js.
  */
 import React, { useState } from 'react';
 import { Accordion } from './Accordion';
 import { SubAccordion } from './SubAccordion';
 import { useSimulador } from '../context/SimuladorProvider';
-import { PropostaPDF } from './PropostaPDF'; // Importação mantida
+import { PropostaPDF } from './PropostaPDF'; // Componente de visualização mantido para imports
 
 const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
 
@@ -95,11 +95,9 @@ export const AdicionarSimulacao = () => {
     gerarDadosProposta 
   } = useSimulador();
 
-  // NOVO ESTADO: Gerencia o modal de exportação
+  // ESTADO: Gerencia o modal de exportação
   const [showModal, setShowModal] = useState(false);
   const [exportData, setExportData] = useState({});
-  // Mantemos o estado, mas a lógica de renderização condicional é removida do retorno principal
-  const [isPrinting, setIsPrinting] = useState(false); 
 
   const handleCurrencyChange = (e) => {
     let value = e.target.value;
@@ -123,7 +121,7 @@ export const AdicionarSimulacao = () => {
      handleFormChange({ target: { name: 'percentualSeguro', value: value } });
   };
   
-  // NOVO HANDLER: Geração de Proposta (Abre o modal)
+  // HANDLER: Geração de Proposta (Abre o modal)
   const handleGerarProposta = () => {
       try {
           const dadosExportacao = gerarDadosProposta();
@@ -134,20 +132,22 @@ export const AdicionarSimulacao = () => {
       }
   };
   
-  // NOVO HANDLER: Ação de Impressão (Chamado pelo Modal)
+  // HANDLER AJUSTADO: Ação de Impressão (Delegando ao componente pai)
   const handlePrint = () => {
-      // Esta lógica DEVE ser movida para o componente Root (App.js ou o Componente Pai)
-      // para que a renderização condicional não quebre a página.
-      alert("A impressão será iniciada! A renderização condicional deve estar no componente pai.");
-      
-      // Simulação da lógica de impressão que deve ser executada no App.js:
-      // setIsPrinting(true);
+      // Esta lógica de renderização DEVE estar no componente Root (App.js)
       setShowModal(false);
-      // setTimeout(() => { window.print(); setIsPrinting(false); }, 500); 
+      
+      // Chamada à função global (definida no App.js)
+      if (window.handleGlobalPrint) {
+          window.handleGlobalPrint(exportData);
+      } else {
+          // Mantém o alerta para diagnóstico se o App.js não foi atualizado
+          alert("Erro: A função de impressão global (window.handleGlobalPrint) não foi definida no componente principal (App.js).");
+      }
   };
 
 
-  // *** RESTAURAÇÃO: REMOVEMOS O 'if (isPrinting)' DO RETORNO PRINCIPAL ***
+  // *** O RETORNO PRINCIPAL DEVE SEMPRE RENDERIZAR O FORMULÁRIO ***
   return (
     <Accordion titulo="Adicionar Simulação" icon="simulacao" comecaAberto={true}>
       
@@ -416,7 +416,7 @@ export const AdicionarSimulacao = () => {
         </button>
       </div>
 
-      {/* --- MODAL DE EXPORTAÇÃO (V3.27.2) --- */}
+      {/* --- MODAL DE EXPORTAÇÃO --- */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-xl p-6">
@@ -435,7 +435,7 @@ export const AdicionarSimulacao = () => {
                     Imprimir / Gerar PDF
                 </button>
                 <p className="text-xs text-gray-500 text-center mb-4">
-                    Isso abrirá a caixa de diálogo de impressão do seu navegador.
+                    Isso acionará a função de impressão global do App.js.
                 </p>
                 <div className="border-t pt-3">
                     <button 
