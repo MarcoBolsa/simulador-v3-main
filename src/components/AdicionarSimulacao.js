@@ -1,11 +1,8 @@
 /*
- * ARQUIVO: /src/components/AdicionarSimulacao.js (VERSÃO 3.26 - CORRIGIDA)
+ * ARQUIVO: /src/components/AdicionarSimulacao.js (VERSÃO 3.26.5 - SUPORTE A MÚLTIPLAS COTAS)
  *
- * CORREÇÕES APLICADAS:
- * 1. Bug de UI/Layout (Preview Roxo):
- * - Removida a classe 'truncate' dos detalhes da Parcela Pré/Pós.
- * - Adicionadas classes 'flex flex-col h-full' aos 5 cards para uniformizar altura.
- * - Adicionada classe 'mt-auto pt-1' aos blocos de detalhes para alinhamento na base.
+ * NOVAS FUNCIONALIDADES:
+ * 1. Adicionado campo 'Qtd. de Cotas' ao formulário para permitir simulações multicotas.
  */
 import React from 'react';
 import { Accordion } from './Accordion';
@@ -33,17 +30,17 @@ const PreviewSimulacao = () => {
   return (
     <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-lg shadow-lg">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-        {/* Crédito Contratado - CORRIGIDO: Adicionado flex flex-col h-full */}
+        {/* Crédito Contratado */}
         <div className="flex flex-col h-full">
           <label className="text-xs uppercase opacity-70">Crédito Contratado</label>
           <p className="text-lg md:text-2xl font-bold mt-auto">{formatCurrency(preview.creditoContratado)}</p>
         </div>
-        {/* Crédito Líquido - CORRIGIDO: Adicionado flex flex-col h-full */}
+        {/* Crédito Líquido */}
         <div className="flex flex-col h-full">
           <label className="text-xs uppercase opacity-70">Crédito Líquido</label>
           <p className="text-lg md:text-2xl font-bold mt-auto">{formatCurrency(preview.creditoLiquido)}</p>
         </div>
-        {/* Parcela Pré - CORRIGIDO: Adicionado flex flex-col h-full */}
+        {/* Parcela Pré */}
         <div className="flex flex-col h-full">
           <label className="text-xs uppercase opacity-70">Parcela Pré</label>
           <p className="text-lg md:text-2xl font-bold">{formatCurrency(preview.parcelaPre.valor)}</p>
@@ -53,7 +50,7 @@ const PreviewSimulacao = () => {
             <p className="text-xs opacity-80">📊 {preview.parcelaPre.parcelasRestantes} parcelas restantes</p>
           </div>
         </div>
-        {/* Lance Bolso - CORRIGIDO: Adicionado flex flex-col h-full */}
+        {/* Lance Bolso */}
         <div className="flex flex-col h-full">
           <label className="text-xs uppercase opacity-70">Lance Bolso</label>
           <p className="text-lg md:text-2xl font-bold">{formatCurrency(preview.lanceBolso)}</p>
@@ -62,7 +59,7 @@ const PreviewSimulacao = () => {
             <p className="text-xs opacity-80">🎯 {((preview.lanceBolso / (preview.creditoLiquido || 1)) * 100).toFixed(1)}% do líquido</p>
           </div>
         </div>
-        {/* Parcela Pós - CORRIGIDO: Adicionado flex flex-col h-full */}
+        {/* Parcela Pós */}
         <div className="flex flex-col h-full">
           <label className="text-xs uppercase opacity-70">Parcela Pós</label>
           <p className="text-lg md:text-2xl font-bold">{formatCurrency(preview.parcelaPos.valor)}</p>
@@ -151,6 +148,20 @@ export const AdicionarSimulacao = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">Prazo Contratado</label>
             <input type="number" name="prazoContratado" value={form.prazoContratado} onChange={handlePrazoChange} placeholder="Ex: 216" className="form-input" />
           </div>
+          {/* NOVO CAMPO: Quantidade de Cotas (V3.26.5) */}
+          <div> 
+            <label className="block text-sm font-medium text-gray-700 mb-1">Qtd. de Cotas</label>
+            <input 
+              type="number" 
+              name="quantidadeCotas" 
+              value={form.quantidadeCotas} 
+              onChange={handleFormChange} 
+              min="1" 
+              placeholder="1" 
+              className="form-input" 
+            />
+          </div>
+          {/* Fim do novo campo */}
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Simulação (opcional)</label>
             <input type="text" name="nomeSimulacao" value={form.nomeSimulacao} onChange={handleFormChange} placeholder="Ex: Conservador, Moderado, Agressivo" className="form-input" />
@@ -162,7 +173,8 @@ export const AdicionarSimulacao = () => {
         </div>
       </div>
       
-      {/* --- DADOS DO GRUPO (Sanfona Interna) --- */}
+      {/* ... Restante do Formulário ... */}
+      
       <SubAccordion titulo="DADOS DO GRUPO">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div>
