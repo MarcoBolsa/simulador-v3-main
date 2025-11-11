@@ -1,4 +1,4 @@
-// ARQUIVO: /src/components/SimulacoesCriadas.js (V3.26.10 - COMPLETO)
+// ARQUIVO: /src/components/SimulacoesCriadas.js (V3.27.1 - COMPLETO)
 
 import React from 'react';
 import { useSimulador } from '../context/SimuladorProvider';
