@@ -52,7 +52,8 @@ export const CenarioCard = ({ cenario }) => {
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
           <label className="text-xs font-medium text-gray-600">PARCELA PRÉ {qtdCotas > 1 && '(Total)'}</label>
           <p className="text-xl font-bold text-gray-800">{formatCurrency(preview.parcelaPre.valor)}</p>
-          <span className="text-xs text-gray-500 truncate" title={preview.parcelaPre.detalhes}>{preview.parcelaPre.detalhes}</span>
+          {/* CORRIGIDO V3.26.9: Removido 'truncate' para permitir quebra de linha e corrigir overflow */}
+          <span className="text-xs text-gray-500" title={preview.parcelaPre.detalhes}>{preview.parcelaPre.detalhes}</span>
         </div>
         {/* LANCE BOLSO */}
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
@@ -71,7 +72,8 @@ export const CenarioCard = ({ cenario }) => {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <label className="text-xs font-medium text-blue-800">PARCELA PÓS {qtdCotas > 1 && '(Total)'}</label>
           <p className="text-xl font-bold text-blue-800">{formatCurrency(preview.parcelaPos.valor)}</p>
-          <span className="text-xs text-blue-600 truncate" title={preview.parcelaPos.detalhes}>{preview.parcelaPos.detalhes}</span>
+          {/* CORRIGIDO V3.26.9: Removido 'truncate' para permitir quebra de linha e corrigir overflow */}
+          <span className="text-xs text-blue-600" title={preview.parcelaPos.detalhes}>{preview.parcelaPos.detalhes}</span>
         </div>
       </div>
 
