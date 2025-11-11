@@ -1,5 +1,5 @@
 /*
- * ARQUIVO: /src/components/AdicionarSimulacao.js (VERSÃO 3.25 - LAYOUT CORRIGIDO + FORMULÁRIO LIMPO)
+ * ARQUIVO: /src/components/AdicionarSimulacao.js (VERSÃO 3.26 - LAYOUT CORRIGIDO + FORMULÁRIO LIMPO)
  *
  * O QUE MUDOU:
  * - O formulário está 100% limpo (baseado no backup V3.12).
@@ -13,7 +13,7 @@ import { useSimulador } from '../context/SimuladorProvider';
 
 const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
 
-// --- Sub-Bloco: O Preview Roxo (COM LAYOUT V3.25 CORRIGIDO) ---
+// --- Sub-Bloco: O Preview Roxo (COM LAYOUT V3.26 CORRIGIDO) ---
 const PreviewSimulacao = () => {
   const { preview, calculos } = useSimulador(); // Pega o 'calculos' para o alerta
 
@@ -244,7 +244,7 @@ export const AdicionarSimulacao = () => {
   				<option>Nenhum</option>
   				<option>Acréscimo %</option>
   				<option>Acréscimo R$</option>
-source   			  </select>
+  			  </select>
   			 </div>
   			 {/* Campo condicional para Upgrade */}
   			 {(form.upgrade === 'Acréscimo %' || form.upgrade === 'Acréscimo R$') && (
@@ -286,7 +286,7 @@ source   			  </select>
   			  <option>Parcela Integral</option>
   			  <option>Parcela Reduzida</option>
   			</select>
-sv  		  </div>
+  		  </div>
   		  {/* Slider Embutido */}
   		  <div className="w-full">
   			<label className="block text-sm font-medium text-gray-700 mb-1">Lance Embutido: {formatCurrency(calculos.lanceEmbutidoValor)}</label>
@@ -314,7 +314,7 @@ sv  		  </div>
   		   </button>
   		   <button onClick={() => handleFormChange({ target: { name: 'estrategiaPosLance', value: 'reduzir_prazo' }})}
   			 className={`btn ${form.estrategiaPosLance === 'reduzir_prazo' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}>
-source   			 Reduzir Prazo
+  			 Reduzir Prazo
   		   </button>
   		   
   		   <div className="flex items-center gap-2">
@@ -325,7 +325,7 @@ source   			 Reduzir Prazo
   		   {form.calcularSeguro && (
   			 <div className="flex-1 min-w-[150px]">
   			  <label className="block text-sm font-medium text-gray-700 mb-1">Percentual Seguro (%):</label>
-Data   			  <input type="text" name="percentualSeguro" value={form.percentualSeguro} onChange={handlePercentualSeguroChange} placeholder="0,030900" className="form-input" />
+  			  <input type="text" name="percentualSeguro" value={form.percentualSeguro} onChange={handlePercentualSeguroChange} placeholder="0,030900" className="form-input" />
   			 </div>
   		   )}
   		</div>
@@ -373,7 +373,7 @@ Data   			  <input type="text" name="percentualSeguro" value={form.percentualSe
   		<button 
   		  className="btn-secondary"
   		  onClick={limparFormulario}
-  		>
+SO  		>
   		  Limpar
   		</button>
   	  </div>
