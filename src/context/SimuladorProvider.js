@@ -1,15 +1,9 @@
 /*
- * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.8 - FINAL DE CORREÇÕES E FUNÇÕES DE GERENCIAMENTO)
+ * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.9 - TOTALIZAÇÃO GLOBAL)
  *
  * NOVAS FUNCIONALIDADES:
- * 1. Implementado Duplicar e Editar (carrega o formulário sem excluir o original).
- * 2. Adicionado 'quantidadeCotas' e 'creditoUnitario' para suporte multi-cotas.
- *
- * CORREÇÕES DE BUG:
- * - V3.26.4: Corrigida a desestruturação e uso da variável 'valorUpgrade'.
- * - V3.26.3: Corrigido erro de sintaxe 'lanceEm Parcelas'.
- * - V3.26.2: Corrigida a referência de função getParcelas para calcularParcelaBase (crash).
- * - V3.26.1: Corrigida a desestruturação de 'planoPagamento' para 'tipoPlano'.
+ * 1. Implementado o cálculo de 'totalGeral' usando useMemo, somando os principais
+ * valores de todos os cenários salvos (Crédito Líquido, Lances, Parcelas).
  */
 
 import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
@@ -561,6 +555,37 @@ export const SimuladorProvider = ({ children }) => {
     }
   }, [form.grupoNo]);
 
+  // ========================================================================
+  // LÓGICA DE TOTALIZAÇÃO GLOBAL (NOVO V3.26.9)
+  // ========================================================================
+  const totalGeral = useMemo(() => {
+    if (cenarios.length === 0) {
+        return {
+            creditoLiquidoTotal: 0,
+            lanceBolsoTotal: 0,
+            parcelaPreTotal: 0,
+            parcelaPosTotal: 0,
+            lanceTotalGeral: 0,
+        };
+    }
+
+    return cenarios.reduce((acc, cenario) => {
+        // Cenário tem os valores TOTAIS (multiplicados por Qtd Cotas) em cenario.preview
+        acc.creditoLiquidoTotal += cenario.preview.creditoLiquido;
+        acc.lanceBolsoTotal += cenario.preview.lanceBolso;
+        acc.parcelaPreTotal += cenario.preview.parcelaPre.valor;
+        acc.parcelaPosTotal += cenario.preview.parcelaPos.valor;
+        acc.lanceTotalGeral += cenario.preview.detalhes.lanceTotal;
+        return acc;
+    }, {
+        creditoLiquidoTotal: 0,
+        lanceBolsoTotal: 0,
+        parcelaPreTotal: 0,
+        parcelaPosTotal: 0,
+        lanceTotalGeral: 0,
+    });
+  }, [cenarios]);
+
 
   // ========================================================================
   // AÇÕES DO ORÇAMENTO
@@ -570,18 +595,16 @@ export const SimuladorProvider = ({ children }) => {
     setCenarios(prev => prev.filter(cenario => cenario.id !== idParaRemover));
   };
   
-  const editarCenario = (idParaEditar) => { // NOVO
+  const editarCenario = (idParaEditar) => { 
     const cenario = cenarios.find(c => c.id === idParaEditar);
     if (cenario) {
       setForm({ ...cenario.inputs });
-      // CORRIGIDO V3.26.8: Não removemos o card, o usuário deve substituir ou remover manualmente
-      // removerCenario(idParaEditar); 
     } else {
       setErrorMessage("Cenário não encontrado para edição.");
     }
   };
   
-  const duplicarCenario = (idParaDuplicar) => { // NOVO
+  const duplicarCenario = (idParaDuplicar) => { 
     const cenario = cenarios.find(c => c.id === idParaDuplicar);
     if (cenario) {
       const novoCenario = {
@@ -694,12 +717,13 @@ export const SimuladorProvider = ({ children }) => {
     calculos,
     preview,
     cenarios,
+    totalGeral,         // NOVO: Totalização Global
     adicionarSimulacao,
     limparTudo,
     limparFormulario,
     removerCenario,
-    editarCenario,      // NOVO
-    duplicarCenario,    // NOVO
+    editarCenario,      
+    duplicarCenario,    
     errorMessage,
   };
 
