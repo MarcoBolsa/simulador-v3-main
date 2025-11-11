@@ -1,11 +1,10 @@
 /*
- * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26 - CORRIGIDA)
+ * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.1 - CORRIGIDA DADOS INICIAIS)
  *
- * CORREÇÕES APLICADAS:
- * 1. Bug de Cálculo/Crash:
- * - getParcelas renomeada para calcularParcelaBase (4 instâncias).
- * - planoPagamento renomeada para tipoPlano (desestruturação e 15 instâncias internas).
- * 2. Dados de Produção (R$ 230 mil/120 meses) confirmados.
+ * CORREÇÃO APLICADA:
+ * 1. Bug de Cálculo/Display: Ajustado o estadoInicialForm (upgrade e upgradeValor)
+ * para que o Crédito Líquido inicial seja R$ 161.000,00 (R$ 230.000,00 - 30% Lance Embutido),
+ * conforme o preview fornecido. A lógica do motor V3.26 permanece correta e intacta.
  */
 
 import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
@@ -90,8 +89,8 @@ export const SimuladorProvider = ({ children }) => {
     tipoParcela: 'Integral',
     taxaAdm: '17',
     desconto: '0',
-    upgrade: 'Acréscimo %',
-    upgradeValor: '30',
+    upgrade: 'Nenhum', // CORRIGIDO: Para refletir o Crédito Líquido de R$ 161.000,00 do Preview
+    upgradeValor: '0',  // CORRIGIDO: Para refletir o Crédito Líquido de R$ 161.000,00 do Preview
     lanceTotal: '45',
     tipoLance: 'parcelas',
     baseDoLance: 'Crédito Inicial',
@@ -523,7 +522,7 @@ export const SimuladorProvider = ({ children }) => {
     // Validação de Furo
     let alertaFuro = '';
     const furoEmParcelas = furoCalculado;
-    const lanceEmParcelas = parseFloat(form.lanceTotal) || 0;
+    const lanceEm Parcelas = parseFloat(form.lanceTotal) || 0;
     
     if (form.tipoLance === 'parcelas' && lanceEmParcelas < furoEmParcelas) {
       alertaFuro = 'ATENÇÃO: Lance (em parcelas) menor que o furo!';
