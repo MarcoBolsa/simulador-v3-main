@@ -1,10 +1,9 @@
 /*
- * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.5 - SUPORTE A MÚLTIPLAS COTAS)
+ * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.6 - FUNÇÕES DE GERENCIAMENTO DE CENÁRIO)
  *
  * NOVAS FUNCIONALIDADES:
- * 1. Adicionado o campo 'quantidadeCotas' ao estado inicial.
- * 2. Refatorada a função 'adicionarSimulacao' para multiplicar os valores TOTAIS
- * (Crédito, Lance, Valor da Parcela) pela quantidade de cotas.
+ * 1. Implementado Duplicar e Editar (carrega o formulário e remove o original).
+ * 2. Adicionado 'creditoUnitario' na simulação para melhorar a exibição de multi-cotas.
  */
 
 import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
@@ -516,9 +515,6 @@ export const SimuladorProvider = ({ children }) => {
     
     let baseEmbutido = valorCred;
     if (form.baseDoLance === 'Crédito Final' && simulationResult.success) {
-      // Nota: 'creditoFinal' não está no objeto data, mas é uma variável calculada
-      // e é assumida aqui. Se der erro, deve-se usar o 'valorCreditoFinal' da função simulationResult.
-      // Por enquanto, confiamos que o 'preview' será alimentado com o valor correto
       baseEmbutido = simulationResult.data.creditoFinal || valorCred; 
     }
     const lanceEmbutidoValor = baseEmbutido * (form.lanceEmbutidoPerc / 100);
@@ -564,6 +560,35 @@ export const SimuladorProvider = ({ children }) => {
   // AÇÕES DO ORÇAMENTO
   // ========================================================================
   
+  const removerCenario = (idParaRemover) => {
+    setCenarios(prev => prev.filter(cenario => cenario.id !== idParaRemover));
+  };
+  
+  const editarCenario = (idParaEditar) => { // NOVO
+    const cenario = cenarios.find(c => c.id === idParaEditar);
+    if (cenario) {
+      setForm({ ...cenario.inputs });
+      // Remove o cenário original, pois a intenção é geralmente substituí-lo
+      removerCenario(idParaEditar);
+    } else {
+      setErrorMessage("Cenário não encontrado para edição.");
+    }
+  };
+  
+  const duplicarCenario = (idParaDuplicar) => { // NOVO
+    const cenario = cenarios.find(c => c.id === idParaDuplicar);
+    if (cenario) {
+      const novoCenario = {
+        ...cenario,
+        id: Date.now(), // Novo ID único
+        // Usa o nome salvo no input, adicionando ' (Cópia)' se não tiver nomeSimulacao
+        nome: cenario.inputs.nomeSimulacao ? `${cenario.inputs.nomeSimulacao} (Cópia)` : `Cenário ${cenarios.length + 1}`
+      };
+      // Adiciona o novo cenário ao final da lista
+      setCenarios(prev => [...prev, novoCenario]);
+    }
+  };
+
   const adicionarSimulacao = () => {
     if (preview && !calculos.alertaFuro) {
       // 1. Pega a quantidade de cotas
@@ -572,8 +597,11 @@ export const SimuladorProvider = ({ children }) => {
       // 2. Cria o novo objeto de preview com os valores totais multiplicados
       const previewTotal = {
         ...preview,
+        // NOVO: Salva o valor unitário do crédito antes da multiplicação
+        creditoUnitario: preview.creditoContratado, 
+        
         // Multiplica os totais da proposta
-        creditoContratado: preview.creditoContratado * qtdCotas,
+        creditoContratado: preview.creditoContratado * qtdCotas, // Agora é o Total
         creditoLiquido: preview.creditoLiquido * qtdCotas,
         lanceBolso: preview.lanceBolso * qtdCotas,
         
@@ -626,10 +654,6 @@ export const SimuladorProvider = ({ children }) => {
     }
   };
   
-  const removerCenario = (idParaRemover) => {
-    setCenarios(prev => prev.filter(cenario => cenario.id !== idParaRemover));
-  };
-  
   const limparTudo = () => {
     setCenarios([]);
     setForm(estadoInicialForm);
@@ -644,7 +668,7 @@ export const SimuladorProvider = ({ children }) => {
         valorCredito: prev.valorCredito,
         prazoContratado: prev.prazoContratado,
         prazoOriginal: prev.prazoOriginal,
-        quantidadeCotas: prev.quantidadeCotas, // Adicionado para manter a qtd de cotas
+        quantidadeCotas: prev.quantidadeCotas, // Mantém a qtd de cotas
       }));
      setTaxaAdmOriginal(parseFloat(estadoInicialForm.taxaAdm) || 0);
   };
@@ -668,6 +692,8 @@ export const SimuladorProvider = ({ children }) => {
     limparTudo,
     limparFormulario,
     removerCenario,
+    editarCenario,      // NOVO
+    duplicarCenario,    // NOVO
     errorMessage,
   };
 
