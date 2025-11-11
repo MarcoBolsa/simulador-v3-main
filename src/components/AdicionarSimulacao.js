@@ -1,8 +1,8 @@
 /*
- * ARQUIVO: /src/components/AdicionarSimulacao.js (VERSÃO 3.26.5 - SUPORTE A MÚLTIPLAS COTAS)
+ * ARQUIVO: /src/components/AdicionarSimulacao.js (VERSÃO 3.26.10 - BOTÃO DE PROPOSTA)
  *
  * NOVAS FUNCIONALIDADES:
- * 1. Adicionado campo 'Qtd. de Cotas' ao formulário para permitir simulações multicotas.
+ * 1. Adicionado o botão "Gerar Proposta" na seção de Ações.
  */
 import React from 'react';
 import { Accordion } from './Accordion';
@@ -44,30 +44,23 @@ const PreviewSimulacao = () => {
         <div className="flex flex-col h-full">
           <label className="text-xs uppercase opacity-70">Parcela Pré</label>
           <p className="text-lg md:text-2xl font-bold">{formatCurrency(preview.parcelaPre.valor)}</p>
-          {/* CORREÇÃO V3.26: Envolto em div mt-auto e 'truncate' removido */}
-          <div className="mt-auto pt-1">
-            <p className="text-xs opacity-80" title={preview.parcelaPre.detalhes}>{preview.parcelaPre.detalhes}</p>
-            <p className="text-xs opacity-80">📊 {preview.parcelaPre.parcelasRestantes} parcelas restantes</p>
-          </div>
+          {/* CORREÇÃO V3.12: Mostra os detalhes e parcelas restantes */}
+          <p className="text-xs opacity-80" title={preview.parcelaPre.detalhes}>{preview.parcelaPre.detalhes}</p>
+          <p className="text-xs opacity-80">📊 {preview.parcelaPre.parcelasRestantes} parcelas restantes</p>
         </div>
         {/* Lance Bolso */}
         <div className="flex flex-col h-full">
           <label className="text-xs uppercase opacity-70">Lance Bolso</label>
           <p className="text-lg md:text-2xl font-bold">{formatCurrency(preview.lanceBolso)}</p>
-          {/* CORREÇÃO V3.26: Envolto em div mt-auto */}
-          <div className="mt-auto pt-1">
-            <p className="text-xs opacity-80">🎯 {((preview.lanceBolso / (preview.creditoLiquido || 1)) * 100).toFixed(1)}% do líquido</p>
-          </div>
+          <p className="text-xs opacity-80">🎯 {((preview.lanceBolso / (preview.creditoLiquido || 1)) * 100).toFixed(1)}% do líquido</p>
         </div>
         {/* Parcela Pós */}
         <div className="flex flex-col h-full">
           <label className="text-xs uppercase opacity-70">Parcela Pós</label>
           <p className="text-lg md:text-2xl font-bold">{formatCurrency(preview.parcelaPos.valor)}</p>
-           {/* CORREÇÃO V3.26: Envolto em div mt-auto e 'truncate' removido */}
-           <div className="mt-auto pt-1">
-             <p className="text-xs opacity-80" title={preview.parcelaPos.detalhes}>{preview.parcelaPos.detalhes}</p>
-             <p className="text-xs opacity-80">📊 {preview.parcelaPos.parcelasRestantes} parcelas restantes</p>
-           </div>
+           {/* CORREÇÃO V3.12: Mostra os detalhes e parcelas restantes */}
+           <p className="text-xs opacity-80" title={preview.parcelaPos.detalhes}>{preview.parcelaPos.detalhes}</p>
+           <p className="text-xs opacity-80">📊 {preview.parcelaPos.parcelasRestantes} parcelas restantes</p>
         </div>
       </div>
       <p className="text-center text-sm mt-4 text-green-300 font-medium">
@@ -89,7 +82,8 @@ export const AdicionarSimulacao = () => {
     handleDescontoChange, 
     calculos, 
     adicionarSimulacao,
-    limparFormulario 
+    limparFormulario,
+    cenarios // Para verificar se há cenários e habilitar o botão
   } = useSimulador();
 
   const handleCurrencyChange = (e) => {
@@ -112,6 +106,12 @@ export const AdicionarSimulacao = () => {
   const handlePercentualSeguroChange = (e) => {
      let value = e.target.value.replace(/[^0-9,]/g, ''); // Permite apenas números e vírgula
      handleFormChange({ target: { name: 'percentualSeguro', value: value } });
+  };
+  
+  // NOVO HANDLER: Geração de Proposta
+  const handleGerarProposta = () => {
+      // Implementação futura de coleta de dados e geração de PDF/e-mail
+      alert("Módulo de Geração de Proposta ativado. Próxima etapa: Desenvolver a exportação.");
   };
 
   return (
@@ -173,8 +173,7 @@ export const AdicionarSimulacao = () => {
         </div>
       </div>
       
-      {/* ... Restante do Formulário ... */}
-      
+      {/* --- DADOS DO GRUPO (Sanfona Interna) --- */}
       <SubAccordion titulo="DADOS DO GRUPO">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div>
@@ -356,20 +355,30 @@ export const AdicionarSimulacao = () => {
         <PreviewSimulacao />
       </div>
 
-      {/* --- BOTÕES DE AÇÃO --- */}
+      {/* --- BOTÕES DE AÇÃO (MODIFICADO) --- */}
       <div className="mt-8 pt-6 border-t border-gray-200 flex justify-between gap-4">
         <button 
-          className="btn-primary w-full"
-          onClick={adicionarSimulacao}
-          disabled={!!calculos.alertaFuro}
+            className="btn-primary w-full"
+            onClick={adicionarSimulacao}
+            disabled={!!calculos.alertaFuro}
         >
-          Adicionar Simulação
+            Adicionar Simulação
         </button>
+        
+        {/* NOVO BOTÃO: Gerar Proposta */}
         <button 
-          className="btn-secondary"
-          onClick={limparFormulario}
+            className="btn bg-red-600 text-white hover:bg-red-700"
+            onClick={handleGerarProposta}
+            disabled={cenarios.length === 0} // Desabilita se não houver cenários
         >
-          Limpar
+            Gerar Proposta
+        </button>
+        
+        <button 
+            className="btn-secondary"
+            onClick={limparFormulario}
+        >
+            Limpar
         </button>
       </div>
 
