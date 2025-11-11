@@ -1,9 +1,10 @@
 /*
- * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.2 - CORRIGIDA SINTAXE)
+ * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.3 - DADOS INICIAIS REVERTIDOS)
  *
  * CORREÇÃO APLICADA:
- * 1. Bug de Build: Corrigido erro de sintaxe "Missing initializer in const declaration"
- * removendo o espaço indevido na variável 'lanceEm Parcelas'.
+ * 1. Revertido o estadoInicialForm para o cenário de teste original. O Upgrade de 30% está ativo.
+ * Isto faz com que o Crédito Líquido calculado retorne ao valor LOGICAMENTE CORRETO de R$ 230.000,00
+ * (R$ 299.000,00 - R$ 69.000,00), restaurando a intenção de teste do Arquiteto de Software.
  */
 
 import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
@@ -88,8 +89,8 @@ export const SimuladorProvider = ({ children }) => {
     tipoParcela: 'Integral',
     taxaAdm: '17',
     desconto: '0',
-    upgrade: 'Nenhum', // CORRIGIDO: Para refletir o Crédito Líquido de R$ 161.000,00 do Preview
-    upgradeValor: '0',  // CORRIGIDO: Para refletir o Crédito Líquido de R$ 161.000,00 do Preview
+    upgrade: 'Acréscimo %', // REVERTIDO para a intenção original do teste
+    upgradeValor: '30',  // REVERTIDO para a intenção original do teste
     lanceTotal: '45',
     tipoLance: 'parcelas',
     baseDoLance: 'Crédito Inicial',
@@ -521,7 +522,7 @@ export const SimuladorProvider = ({ children }) => {
     // Validação de Furo
     let alertaFuro = '';
     const furoEmParcelas = furoCalculado;
-    const lanceEmParcelas = parseFloat(form.lanceTotal) || 0; // CORRIGIDO: Removido o espaço 'Em Parcelas'
+    const lanceEmParcelas = parseFloat(form.lanceTotal) || 0; 
     
     if (form.tipoLance === 'parcelas' && lanceEmParcelas < furoEmParcelas) {
       alertaFuro = 'ATENÇÃO: Lance (em parcelas) menor que o furo!';
