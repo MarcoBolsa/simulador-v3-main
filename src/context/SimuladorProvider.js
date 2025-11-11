@@ -252,7 +252,7 @@ export const SimuladorProvider = ({ children }) => {
   	  };
       
   	  // --- INÍCIO DO MOTOR DE CÁLCULO V15 ---
-  	  // ✅ CORREÇÃO V3.25: Pega 'tipoPlano' (não 'planoPagamento')
+  	  // ✅ CORREÇÃO V3.26: Pega 'tipoPlano' (não 'planoPagamento')
   	  const {
   	 	valorCredito, prazoContratado, calcularSeguro,
   	 	lanceEmbutidoPercentual, mesContemplacao, prazoRealizado, usarLanceValor, lanceTotalValorInput, lanceTotalParcelas,
@@ -318,7 +318,7 @@ export const SimuladorProvider = ({ children }) => {
   	 	creditoBaseLance, prazoContratado, taxaAdmTotal, tipoPlano, // <- CORRIGIDO
   	 	tipoParcelaLance, calcularSeguro, form.percentualSeguro
   	  );
-      
+    	 
   	  const pLanceMetade2 = pLance2 !== null ? pLance2 : pLance1;
   	  const numParcelasMetade = Math.ceil(prazoContratado / 2);
     
@@ -396,7 +396,7 @@ export const SimuladorProvider = ({ children }) => {
   	 	  const reajustesAplicados = Math.floor(Math.max(0, mes - 1) / 12);
   	 	  const creditoDoMes = valorCredito * Math.pow(1 + reajusteAnual / 100, reajustesAplicados);
           
-  	 	  // ✅ CORREÇÃO V3.25: Usar 'calcularParcelaBase'
+  	 	  // ✅ CORREÇÃO V3.26: Usar 'calcularParcelaBase'
   	 	  const pIntegralBase = calcularParcelaBase(creditoDoMes, prazoContratado, taxaAdmTotal, tipoPlano, "Integral", false, '0').parcela; // <- CORRIGIDO
   	 	  const pReduzidaBase = calcularParcelaBase(creditoDoMes, prazoContratado, taxaAdmTotal, tipoPlano, tipoParcela, false, '0').parcela; // <- CORRIGIDO
           
@@ -414,7 +414,7 @@ export const SimuladorProvider = ({ children }) => {
       
   	  if (baseLance === "Credito_Final" || baseLance === "Parcela_Integral" || baseLance === "Parcela_Reduzida") {
   	 	// Fórmula 3.3.6
-  	 	// ✅ CORREÇÃO V3.25: Usar 'calcularParcelaBase'
+  	 	// ✅ CORREÇÃO V3.26: Usar 'calcularParcelaBase'
   	 	const finalBase = calcularParcelaBase(valorCreditoFinal, prazoContratado, taxaAdmTotal, tipoPlano, "Integral", calcularSeguro, form.percentualSeguro); // <- CORRIGIDO
   	 	novaParcela1 = finalBase.parcela - descontoMensal + acrescimoMensalDiferenca;
   	 	novaParcela2 = (finalBase.parcelaFinal !== null ? finalBase.parcelaFinal : finalBase.parcela) - descontoMensal + acrescimoMensalDiferenca;
@@ -427,7 +427,7 @@ export const SimuladorProvider = ({ children }) => {
   	 	const ta_r_final = valorCreditoFinal * taxaAdmTotal;
   	 	const sp_r_pos = calcularSeguro ? (valorCreditoFinal + ta_r_final) * (percentualSeguro / 100) : 0;
     
-  	 	// ✅ CORREÇÃO V3.25: Usar 'calcularParcelaBase'
+  	 	// ✅ CORREÇÃO V3.26: Usar 'calcularParcelaBase'
   	 	const preBase = calcularParcelaBase(valorCredito, prazoContratado, taxaAdmTotal, tipoPlano, tipoParcela, false, '0'); // <- CORRIGIDO
   	 	const p1_pre_base = preBase.parcela;
   	 	const p2_pre_base = preBase.parcelaFinal !== null ? preBase.parcelaFinal : p1_pre_base;
@@ -495,7 +495,7 @@ export const SimuladorProvider = ({ children }) => {
     
   // ========================================================================
   // LÓGICA AUTOMÁTICA (Reagindo ao 'form' e ao 'motor')
-SO  // ========================================================================
+  // ========================================================================
   useEffect(() => {
     // Atualiza o Cérebro com os resultados do motor de cálculo
     if (simulationResult.success) {
@@ -510,14 +510,14 @@ SO  // ========================================================================
     const prazoCont = parseInt(form.prazoContratado) || 0;
     
     const prazoARealizarCalculado = Math.max(0, prazoOrig - prazoRealiz);
-SO    const prazoRestanteGrupo = prazoOrig - prazoRealiz;
+    const prazoRestanteGrupo = prazoOrig - prazoRealiz;
     const furoCalculado = Math.max(0, prazoCont - prazoRestanteGrupo);
     
     const valorCred = parseCurrency(form.valorCredito);
     
   	let baseEmbutido = valorCred;
   	if (form.baseDoLance === 'Crédito Final' && simulationResult.success && simulationResult.data.creditoFinal) {
-  	  baseEmbutido = simulationResult.data.creditoFinal;
+		baseEmbutido = simulationResult.data.creditoFinal;
   	}
   	const lanceEmbutidoValor = baseEmbutido * (form.lanceEmbutidoPerc / 100);
 
@@ -537,7 +537,7 @@ SO    const prazoRestanteGrupo = prazoOrig - prazoRealiz;
     setCalculos({
       prazoARealizar: prazoARealizarCalculado,
       lanceEmbutidoValor: lanceEmbutidoValor,
-source       alertaFuro: alertaFuro,
+      alertaFuro: alertaFuro,
     });
     
   }, [form, simulationResult]);
@@ -570,14 +570,14 @@ source       alertaFuro: alertaFuro,
         {
           id: Date.now(),
           nome: form.nomeSimulacao || `Cenário ${cenarios.length + 1}`,
-      	  inputs: { ...form },
-  	       preview: { ...preview }
-  	 	}
-  	  ]);
-  	  setForm(prev => ({
-  	 	...estadoInicialForm,
-  	 	// Mantém dados úteis para a próxima simulação
-  	 	grupoNo: prev.grupoNo,
+          inputs: { ...form },
+          preview: { ...preview }
+        }
+      ]);
+      setForm(prev => ({
+        ...estadoInicialForm,
+        // Mantém dados úteis para a próxima simulação
+    	  grupoNo: prev.grupoNo,
   	 	valorCredito: prev.valorCredito,
   	 	prazoContratado: prev.prazoContratado,
   	 	prazoOriginal: prev.prazoOriginal,
@@ -590,7 +590,7 @@ source       alertaFuro: alertaFuro,
   	} else {
   	  alert("Simulação inválida. Verifique os dados.");
   	}
-JSON };
+  };
   
   const removerCenario = (idParaRemover) => {
   	setCenarios(prev => prev.filter(cenario => cenario.id !== idParaRemover));
@@ -600,7 +600,7 @@ JSON };
   	setCenarios([]);
   	setForm(estadoInicialForm);
   	setTaxaAdmOriginal(parseFloat(estadoInicialForm.taxaAdm) || 0);
-Source };
+  };
   
   const limparFormulario = () => {
   	  setForm(prev => ({
@@ -623,7 +623,7 @@ Source };
     form,
     handleFormChange,
     handlePrazoChange,
-section     handleFuroChange, // Exporta o handler do furo manual
+    handleFuroChange, // Exporta o handler do furo manual
     handleTaxaChange,
     handleDescontoChange,
     calculos,
@@ -638,9 +638,9 @@ section     handleFuroChange, // Exporta o handler do furo manual
 
   return (
     <SimuladorContext.Provider value={value}>
-    	{children}
+    a {children}
     </SimuladorContext.Provider>
-JSON );
+  );
 };
 
 // "Atalho" para os blocos
