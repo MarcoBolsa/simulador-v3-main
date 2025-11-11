@@ -1,75 +1,24 @@
 /*
- * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.26.10 - TOTALIZAÇÃO GLOBAL IMPLEMENTADA)
+ * ARQUIVO: /src/context/SimuladorProvider.js (VERSÃO 3.27.0 - GERAÇÃO DA PROPOSTA)
  *
  * NOVAS FUNCIONALIDADES:
- * 1. Implementado o cálculo de 'totalGeral' usando useMemo, somando os principais
- * valores de todos os cenários salvos (Crédito Líquido, Lances, Parcelas).
+ * 1. Implementada a função 'gerarDadosProposta' que estrutura todos os dados de estado
+ * (Proposta, Cenários e Total Geral) em um objeto final pronto para ser exportado (PDF/E-mail).
+ * 2. Início do Particionamento: As funções puras (groupRules, formatCurrency, etc.)
+ * foram movidas para SimuladorUtils.js (A implementação completa do Utils deve ser feita separadamente).
  */
 
 import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
-
-// ========================================================================
-// REGRAS DE NEGÓCIO (Do seu arquivo de script)
-// ========================================================================
-const groupRules = {
-  '1740': { livre: 10, fixo: 0, taxaAdm: 19, fundoReserva: 1 }, '1741': { livre: 20, fixo: 20, taxaAdm: 19, fundoReserva: 1 }, '1742': { livre: 20, fixo: 20, taxaAdm: 19, fundoReserva: 1 }, '1743': { livre: 20, fixo: 20, taxaAdm: 19, fundoReserva: 1 }, '1744': { livre: 20, fixo: 20, taxaAdm: 19, fundoReserva: 1 }, '1745': { livre: 20, fixo: 20, taxaAdm: 19, fundoReserva: 1 }, '1746': { livre: 20, fixo: 20, taxaAdm: 19, fundoReserva: 1 },
-  '1750': { livre: 20, fixo: 20, taxaAdm: 19, fundoReserva: 1 }, '1760': { livre: 20, fixo: 20, taxaAdm: 19, fundoReserva: 1 }, '1761': { livre: 20, fixo: 20, taxaAdm: 19, fundoReserva: 1 }, '1762': { livre: 20, fixo: 20, taxaAdm: 19, fundoReserva: 1 },
-  '1763': { livre: 30, fixo: 30, taxaAdm: 19, fundoReserva: 1 }, '1764': { livre: 30, fixo: 30, taxaAdm: 19, fundoReserva: 1 }, '1765': { livre: 30, fixo: 30, taxaAdm: 19, fundoReserva: 1 }, '1766': { livre: 30, fixo: 30, taxaAdm: 19, fundoReserva: 1 }, '1767': { livre: 30, fixo: 30, taxaAdm: 19, fundoReserva: 1 }, '1768': { livre: 30, fixo: 30, taxaAdm: 17, fundoReserva: 0 }, '1769': { livre: 30, fixo: 30, taxaAdm: 19, fundoReserva: 1 }, '1772': { livre: 30, fixo: 30, taxaAdm: 19, fundoReserva: 1 },
-  '1770': { livre: 20, fixo: 20, taxaAdm: 19, fundoReserva: 1 }, '1771': { livre: 20, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 }, '1773': { livre: 20, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 }, '1775': { livre: 20, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 },
-  '1790': { livre: 20, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 }, '1777': { livre: 30, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 }, '1779': { livre: 30, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 }, '1781': { livre: 30, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 },
-  '1778': { livre: 30, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 }, '1782': { livre: 30, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 }, '1780': { livre: 20, fixo: 20, taxaAdm: 19, fundoReserva: 1},
-  '1783': { livre: 0, fixo: 30, taxaAdm: 19, fundoReserva: 1 }, '1786': { livre: 30, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 }, '1788': { livre: 30, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 },
-  '1789': { livre: 30, fixo: 30, taxaAdm: 19, fundoReserva: 1 }, '1791': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 }, 
-  '1793': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 },
-  '1792': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 }, '1794': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 },
-  '1795': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 },
-  '1796': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 }, '1798': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 },
-  '1797': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 }, '1799': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 }, '2103': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 }, '2107': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 }, '2111': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 },
-  '1810': { livre: 10, fixo: 0, taxaAdm: 19, fundoReserva: 1 }, '1820': { livre: 10, fixo: 0, taxaAdm: 19, fundoReserva: 1 }, '1830': { livre: 30, fixo: 0, taxaAdm: 19, fundoReserva: 1 },
-  '1840': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 }, '1850': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 },
-  '1860': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 },
-  '1870': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'integral' }, taxaAdm: 19, fundoReserva: 1 },
-  '1880': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'integral' }, taxaAdm: 19, fundoReserva: 1 },
-  '1890': { livre: 30, fixo: 30, taxaAdm: 19, fundoReserva: 1 },
-  '1902': { livre: 10, fixo: 0, taxaAdm: 19, fundoReserva: 1 },
-  '1903': { livre: 30, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 }, '1905': { livre: 30, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 }, '1907': { livre: 30, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 }, '1908': { livre: 30, fixo: 0, taxaAdm: 17, fundoReserva: 0.5 },
-  '2102': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'integral' }, taxaAdm: 19, fundoReserva: 1 },
-  '2108': { livre: 0, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'integral' }, taxaAdm: 19, fundoReserva: 1 },
-  '2113': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 },
-  '2115': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'reduzida' }, taxaAdm: 19, fundoReserva: 1 },
-  '2117': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'integral' }, taxaAdm: 19, fundoReserva: 1 },
-  '2119': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'integral' }, taxaAdm: 19, fundoReserva: 1 },
-  '2121': { livre: 30, fixo: 30, parcelaReduzida: { enabled: true, lanceCalculadoSobre: 'integral' }, taxaAdm: 19, fundoReserva: 1 },
-};
-
-const upgradeTables = {
-  '1771': {'70000':100000,'75000':107000,'80000':114000,'85000':121000,'90000':128000,'95000':135000,'100000':140000, '105000':140000, '110000':140000, '115000':140000, '120000':140000, '125000':140000, '130000':140000, '135000':140000, '140000':140000},
-  '1773': {'70000':100000,'75000':107000,'80000':114000,'85000':121000,'90000':128000,'95000':135000,'100000':140000, '105000':140000, '110000':140000, '115000':140000, '120000':140000, '125000':140000, '130000':140000, '135000':140000, '140000':140000},
-  '1775': {'70000':100000,'75000':107000,'80000':114000,'85000':121000,'90000':128000,'95000':135000,'100000':140000, '105000':140000, '110000':140000, '115000':140000, '120000':140000, '125000':140000, '130000':140000, '135000':140000, '140000':140000},
-  '1777': {'70000':100000,'75000':107000,'80000':114000,'85000':121000,'90000':128000,'95000':135000,'100000':140000, '105000':140000, '110000':140000, '115000':140000, '120000':140000, '125000':140000, '130000':140000, '135000':140000, '140000':140000},
-  '1779': {'70000':100000,'75000':107000,'80000':114000,'85000':121000,'90000':128000,'95000':135000,'100000':140000, '105000':140000, '110000':140000, '115000':140000, '120000':140000, '125000':140000, '130000':140000, '135000':140000, '140000':140000},
-  '1781': {'70000':100000,'75000':107000,'80000':114000,'85000':121000,'90000':128000,'95000':135000,'100000':140000, '105000':140000, '110000':140000, '115000':140000, '120000':140000, '125000':140000, '130000':140000, '135000':140000, '140000':140000},
-  '1778': {'150000':214285.71,'160000':228571.43,'170000':242857.14,'180000':257142.86,'190000':271428.57,'200000':285714.29,'210000':300000,'220000':314285.71,'230000':328571.43,'240000':342857.14,'250000':357142.86,'260000':371428.57,'270000':385714.29,'280000':400000,'290000':414285.71, '300000':428571.43},
-  '1782': {'150000':214285.71,'160000':228571.43,'170000':242857.14,'180000':257142.86,'190000':271428.57,'200000':285714.29,'210000':300000,'220000':314285.71,'230000':328571.43,'240000':342857.14,'250000':357142.86,'260000':371428.57,'270000':385714.29,'280000':400000,'290000':414285.71, '300000':428571.43},
-  '1783': {'80000':115000,'85000':120000,'90000':130000,'95000':135000,'100000':145000,'105000':150000,'110000':160000, '115000':160000, '120000':160000, '125000':160000, '130000':160000, '135000':160000, '140000':160000, '145000':160000, '150000':160000, '155000':160000, '160000':160000},
-  '1786': {'180000':257142.86,'190000':271428.57,'200000':285714.29,'210000':300000,'220000':314285.71,'230000':328571.43,'240000':342857.14,'250000':357142.86,'260000':371428.57,'270000':385714.29,'280000':400000,'290000':414285.71,'300000':428571.43,'310000':442857.71,'320000':457142.86,'330000':471428.57,'340000':485714.29,'350000':500000,'360000':514285.71},
-  '1788': {'180000':257142.86,'190000':271428.57,'200000':285714.29,'210000':300000,'220000':314285.71,'230000':328571.43,'240000':342857.14,'250000':357142.86,'260000':371428.57,'270000':385714.29,'280000':400000,'290000':414285.71,'300000':428571.43,'310000':442857.71,'320000':457142.86,'330000':471428.57,'340000':485714.29,'350000':500000,'360000':514285.71},
-  '1789': {'80000':115000,'85000':120000,'90000':130000,'95000':135000,'100000':145000,'105000':150000,'110000':160000, '115000':160000, '120000':160000, '125000':160000, '130000':160000, '135000':160000, '140000':160000, '145000':160000, '150000':160000, '155000':160000, '160000':160000},
-  '1790': {'350000':500000,'400000':571000,'410000':585000,'420000':600000, '450000':600000, '500000':600000, '550000':600000, '600000':600000, '650000':600000, '700000':600000 },
-  '1903': {'80000':115000,'85000':120000,'90000':130000,'95000':135000,'100000':145000,'105000':150000,'110000':160000, '115000':160000, '120000':160000, '125000':160000, '130000':160000, '135000':160000, '140000':160000, '145000':160000, '150000':160000, '155000':160000, '160000':160000},
-  '1905': {'80000':115000,'85000':120000,'90000':130000,'95000':135000,'100000':145000,'105000':150000,'110000':160000, '115000':160000, '120000':160000, '125000':160000, '130000':160000, '135000':160000, '140000':160000, '145000':160000, '150000':160000, '155000':160000, '160000':160000},
-  '1907': {'80000':115000,'85000':120000,'90000':130000,'95000':135000,'100000':145000,'105000':150000,'110000':160000, '115000':160000, '120000':160000, '125000':160000, '130000':160000, '135000':160000, '140000':160000, '145000':160000, '150000':160000, '155000':160000, '160000':160000},
-  '1908': {'112000':160000,'119000':170000,'126000':180000,'133000':190000,'140000':200000,'147000':210000,'154000':220000, '110000':220000, '120000':220000, '130000':220000, '140000':220000, '150000':220000, '160000':220000, '170000':220000, '180000':220000, '190000':220000, '200000':220000, '210000':220000, '220000':220000},
-};
+// IMPORTAÇÃO MODULARIZADA: Substitui todas as funções de utils e regras de negócio
+import { 
+    parseCurrency, 
+    formatCurrency, 
+    groupRules, 
+    upgradeTables, // Mantemos importado, embora não usado diretamente aqui
+    calcularParcelaBase 
+} from './SimuladorUtils'; 
 
 const SimuladorContext = createContext();
-
-const parseCurrency = (value) => {
-  if (typeof value === 'number') return value;
-  if (!value) return 0;
-  return parseFloat(String(value).replace(/[^0-9,]/g, '').replace(',', '.')) || 0;
-};
-const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
 
 export const SimuladorProvider = ({ children }) => {
   
@@ -190,38 +139,15 @@ export const SimuladorProvider = ({ children }) => {
   // MOTOR DE CÁLCULO V15 (O "Coração" do Sistema)
   // ========================================================================
   
+  // O corpo do useMemo 'simulationResult' (linhas 250-449) permanece aqui por ora
+
   // Helper 3.1: Calcular Parcela Base
-  const calcularParcelaBase = (credito, prazo, taxaAdmTotal, plano, tipoParcela, calcularSeguro, percSeguro) => {
-    const taxaSeguroPercent = calcularSeguro ? (parseFloat(String(percSeguro).replace(',', '.')) || 0) / 100 : 0;
-    
-    if (prazo <= 0) return { parcela: 0, parcelaFinal: null };
-
-    const totalCustosAdm = credito * taxaAdmTotal;
-    const sp_r = (credito + totalCustosAdm) * taxaSeguroPercent; //
-    const p_Am = credito / prazo; //
-    
-    let reducao = 1.0; //
-    if (tipoParcela === "Reduzida_70") reducao = 0.7;
-    if (tipoParcela === "Reduzida_50") reducao = 0.5;
-
-    let p = { parcela: 0, parcelaFinal: null };
-
-    if (plano === "linear") { //
-      const adminMensal = (prazo > 0) ? totalCustosAdm / prazo : 0;
-      const base = p_Am + adminMensal;
-      p.parcela = (base * reducao) + sp_r;
-    } else { // "degrau"
-      const pontoDeVirada = Math.ceil(prazo / 2);
-      const adminMetade = (pontoDeVirada > 0) ? totalCustosAdm / pontoDeVirada : 0;
-      const base1 = p_Am + adminMetade;
-      const base2 = p_Am;
-      p.parcela = (base1 * reducao) + sp_r;
-      p.parcelaFinal = (base2 * reducao) + sp_r;
-    }
-    return p;
-  };
-
-  // Motor principal, "memorizado" para rodar apenas quando o 'form' mudar
+  // NOTE: Esta função agora deve ser importada de SimuladorUtils.js
+  
+  // ... (O corpo de runSimulationCalculation estará aqui, mas foi omitido
+  // para o propósito de demonstração do novo código de contexto.
+  // Garanta que ele esteja no seu arquivo final.)
+  
   const simulationResult = useMemo(() => {
     try {
       // 1. MAPEAMENTO: Interface (form) -> DadosEntrada (V15)
@@ -251,28 +177,24 @@ export const SimuladorProvider = ({ children }) => {
       };
       
       // --- INÍCIO DO MOTOR DE CÁLCULO V15 ---
-      // CORREÇÃO V3.9/V3.10: Pega as variáveis corretas
       const {
           valorCredito, prazoContratado, calcularSeguro,
           lanceEmbutidoPercentual, mesContemplacao, prazoRealizado, usarLanceValor, lanceTotalValorInput, lanceTotalParcelas,
-          baseLance, upgrade, valorUpgrade, tipoPlano, percentualSeguro, // CORREÇÃO V3.26.4
+          baseLance, upgrade, valorUpgrade, tipoPlano, percentualSeguro, 
           estrategiaPos, tipoParcela, prazoOriginal, reajusteAnual
       } = dados;
     
       if(!prazoContratado || prazoContratado <= 0) throw new Error("Prazo do contrato inválido.");
       
-      //
       const taxaAdmFinal = dados.taxaAdm * (1 - dados.descontoGrandesNegocios / 100);
       const taxaAdmTotalPercent = taxaAdmFinal + dados.fundoReserva + dados.taxaAdesao;
       const taxaAdmTotal = taxaAdmTotalPercent / 100;
 
       if(isNaN(taxaAdmTotal)) throw new Error("Taxas inválidas.");
     
-      // 3.2.1 Crédito Reajustado
       const numReajustes = Math.floor(Math.max(0, mesContemplacao - 1) / 12);
       const valorCreditoReajustado = valorCredito * Math.pow(1 + reajusteAnual / 100, numReajustes);
       
-      // 3.2.2 Crédito Final (com Upgrade)
       let valorCreditoFinal = valorCreditoReajustado;
       if (upgrade === "Acrescimo_Percentual" && valorUpgrade > 0) {
         valorCreditoFinal = valorCreditoReajustado * (1 + valorUpgrade / 100);
@@ -395,7 +317,6 @@ export const SimuladorProvider = ({ children }) => {
           const reajustesAplicados = Math.floor(Math.max(0, mes - 1) / 12);
           const creditoDoMes = valorCredito * Math.pow(1 + reajusteAnual / 100, reajustesAplicados);
           
-          // **CORREÇÃO V3.26**: Usar calcularParcelaBase
           const pIntegralBase = calcularParcelaBase(creditoDoMes, prazoContratado, taxaAdmTotal, tipoPlano, "Integral", false, '0').parcela;
           const pReduzidaBase = calcularParcelaBase(creditoDoMes, prazoContratado, taxaAdmTotal, tipoPlano, tipoParcela, false, '0').parcela;
           
@@ -412,13 +333,10 @@ export const SimuladorProvider = ({ children }) => {
       let novaParcela2 = 0;
       
       if (baseLance === "Credito_Final" || baseLance === "Parcela_Integral" || baseLance === "Parcela_Reduzida") {
-        // Fórmula 3.3.6
-        // **CORREÇÃO V3.26**: Usar calcularParcelaBase
         const finalBase = calcularParcelaBase(valorCreditoFinal, prazoContratado, taxaAdmTotal, tipoPlano, "Integral", calcularSeguro, form.percentualSeguro); 
         novaParcela1 = finalBase.parcela - descontoMensal + acrescimoMensalDiferenca;
         novaParcela2 = (finalBase.parcelaFinal !== null ? finalBase.parcelaFinal : finalBase.parcela) - descontoMensal + acrescimoMensalDiferenca;
       } else { // "Crédito_Inicial"
-        // Fórmula 3.3.7
         const valorUpgradeEfetivo = valorCreditoFinal - valorCreditoReajustado;
         const taxaAdminUpgrade = valorUpgradeEfetivo * (taxaAdmFinal / 100); // Usa taxa c/ desconto
         const amortUpgradeMensal = (prazoFinal > 0) ? valorUpgradeEfetivo / prazoFinal : 0;
@@ -426,7 +344,6 @@ export const SimuladorProvider = ({ children }) => {
         const ta_r_final = valorCreditoFinal * taxaAdmTotal;
         const sp_r_pos = calcularSeguro ? (valorCreditoFinal + ta_r_final) * (percentualSeguro / 100) : 0;
     
-        // **CORREÇÃO V3.26**: Usar calcularParcelaBase
         const preBase = calcularParcelaBase(valorCredito, prazoContratado, taxaAdmTotal, tipoPlano, tipoParcela, false, '0');
         const p1_pre_base = preBase.parcela;
         const p2_pre_base = preBase.parcelaFinal !== null ? preBase.parcelaFinal : p1_pre_base;
@@ -434,7 +351,7 @@ export const SimuladorProvider = ({ children }) => {
         let taxaUpgradeMensal1a = 0;
         let taxaUpgradeMensal2a = 0;
         
-        if (tipoPlano === 'linear') { // 
+        if (tipoPlano === 'linear') { 
           taxaUpgradeMensal1a = (prazoFinal > 0) ? taxaAdminUpgrade / prazoFinal : 0;
           taxaUpgradeMensal2a = taxaUpgradeMensal1a;
         } else { // Degrau
@@ -451,7 +368,6 @@ export const SimuladorProvider = ({ children }) => {
       let pDetalhePos = `${prazoFinal} parcelas restantes de ${formatCurrency(novaParcela1)}`;
       const pontoDeViradaOriginal = Math.ceil(prazoContratado / 2);
       if (tipoPlano === 'degrau') { 
-         // CORREÇÃO: O ponto de virada PÓS depende do mês de contemplação
          const pontoDeViradaPos = Math.max(0, pontoDeViradaOriginal - (mesContemplacao - 1));
          if (pontoDeViradaPos > 0 && pontoDeViradaPos < prazoFinal) {
            pDetalhePos = `1-${pontoDeViradaPos}: ${formatCurrency(novaParcela1)} | ${pontoDeViradaPos+1}-${prazoFinal}: ${formatCurrency(novaParcela2)}`;
@@ -556,7 +472,7 @@ export const SimuladorProvider = ({ children }) => {
   }, [form.grupoNo]);
 
   // ========================================================================
-  // LÓGICA DE TOTALIZAÇÃO GLOBAL (NOVO V3.26.9)
+  // LÓGICA DE TOTALIZAÇÃO GLOBAL (V3.26.9)
   // ========================================================================
   const totalGeral = useMemo(() => {
     if (cenarios.length === 0) {
@@ -570,7 +486,6 @@ export const SimuladorProvider = ({ children }) => {
     }
 
     return cenarios.reduce((acc, cenario) => {
-        // Cenário tem os valores TOTAIS (multiplicados por Qtd Cotas) em cenario.preview
         acc.creditoLiquidoTotal += cenario.preview.creditoLiquido;
         acc.lanceBolsoTotal += cenario.preview.lanceBolso;
         acc.parcelaPreTotal += cenario.preview.parcelaPre.valor;
@@ -586,6 +501,56 @@ export const SimuladorProvider = ({ children }) => {
     });
   }, [cenarios]);
 
+
+  // ========================================================================
+  // LÓGICA DE GERAÇÃO DA PROPOSTA (NOVO V3.27.0)
+  // ========================================================================
+  const gerarDadosProposta = () => {
+      if (cenarios.length === 0) {
+          throw new Error("Não é possível gerar a proposta sem cenários criados.");
+      }
+      
+      const dadosProposta = {
+          id: `PROPOSTA-${Date.now()}`,
+          dataGeracao: new Date().toLocaleString('pt-BR'),
+          dadosIniciais: proposta, 
+          
+          // 2. Totalização Global (já está calculado)
+          resumoGeral: totalGeral, 
+          
+          // 3. Cenários Detalhados 
+          cenariosDetalhados: cenarios.map(c => ({
+              id: c.id,
+              nome: c.nome,
+              observacoes: c.inputs.observacoes,
+              qtdCotas: c.inputs.quantidadeCotas,
+              // Mantemos os principais resultados
+              resultados: {
+                  grupo: c.inputs.grupoNo,
+                  creditoContratado: c.preview.creditoContratado,
+                  creditoUnitario: c.preview.creditoUnitario,
+                  creditoLiquido: c.preview.creditoLiquido,
+                  lanceTotal: c.preview.detalhes.lanceTotal,
+                  lanceEmbutido: c.preview.detalhes.lanceEmbutido,
+                  lanceBolso: c.preview.lanceBolso,
+                  parcelaPre: {
+                      valor: c.preview.parcelaPre.valor,
+                      detalhes: c.preview.parcelaPre.detalhes
+                  },
+                  parcelaPos: {
+                      valor: c.preview.parcelaPos.valor,
+                      detalhes: c.preview.parcelaPos.detalhes
+                  },
+                  prazo: c.inputs.prazoContratado,
+                  taxaAdm: c.inputs.taxaAdm,
+                  tipoParcela: c.inputs.tipoParcela,
+                  contemplacao: c.preview.detalhes.contemplacao
+              }
+          }))
+      };
+      
+      return dadosProposta;
+  };
 
   // ========================================================================
   // AÇÕES DO ORÇAMENTO
@@ -717,7 +682,8 @@ export const SimuladorProvider = ({ children }) => {
     calculos,
     preview,
     cenarios,
-    totalGeral,         // NOVO: Totalização Global
+    totalGeral,         // Totalização Global
+    gerarDadosProposta, // NOVO
     adicionarSimulacao,
     limparTudo,
     limparFormulario,
