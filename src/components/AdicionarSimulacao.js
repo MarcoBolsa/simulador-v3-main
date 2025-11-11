@@ -1,10 +1,11 @@
 /*
- * ARQUIVO: /src/components/AdicionarSimulacao.js (VERSÃO 3.26.10 - BOTÃO DE PROPOSTA)
+ * ARQUIVO: /src/components/AdicionarSimulacao.js (VERSÃO 3.27.2 - MODAL DE EXPORTAÇÃO)
  *
  * NOVAS FUNCIONALIDADES:
- * 1. Adicionado o botão "Gerar Proposta" na seção de Ações.
+ * 1. Implementado o Modal de Exportação que exibe os dados estruturados para a proposta.
+ * 2. O botão 'Gerar Proposta' agora chama a função gerarDadosProposta e abre o modal.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { Accordion } from './Accordion';
 import { SubAccordion } from './SubAccordion';
 import { useSimulador } from '../context/SimuladorProvider';
@@ -83,8 +84,13 @@ export const AdicionarSimulacao = () => {
     calculos, 
     adicionarSimulacao,
     limparFormulario,
-    cenarios // Para verificar se há cenários e habilitar o botão
+    cenarios, // Para verificar se há cenários e habilitar o botão
+    gerarDadosProposta // NOVO: Função para gerar o objeto de exportação
   } = useSimulador();
+
+  // NOVO ESTADO: Gerencia o modal de exportação
+  const [showModal, setShowModal] = useState(false);
+  const [exportData, setExportData] = useState({});
 
   const handleCurrencyChange = (e) => {
     let value = e.target.value;
@@ -110,8 +116,13 @@ export const AdicionarSimulacao = () => {
   
   // NOVO HANDLER: Geração de Proposta
   const handleGerarProposta = () => {
-      // Implementação futura de coleta de dados e geração de PDF/e-mail
-      alert("Módulo de Geração de Proposta ativado. Próxima etapa: Desenvolver a exportação.");
+      try {
+          const dadosExportacao = gerarDadosProposta();
+          setExportData(dadosExportacao);
+          setShowModal(true);
+      } catch (error) {
+          alert(`Erro ao gerar proposta: ${error.message}`);
+      }
   };
 
   return (
@@ -355,7 +366,7 @@ export const AdicionarSimulacao = () => {
         <PreviewSimulacao />
       </div>
 
-      {/* --- BOTÕES DE AÇÃO (MODIFICADO) --- */}
+      {/* --- BOTÕES DE AÇÃO --- */}
       <div className="mt-8 pt-6 border-t border-gray-200 flex justify-between gap-4">
         <button 
             className="btn-primary w-full"
@@ -365,7 +376,7 @@ export const AdicionarSimulacao = () => {
             Adicionar Simulação
         </button>
         
-        {/* NOVO BOTÃO: Gerar Proposta */}
+        {/* BOTÃO: Gerar Proposta */}
         <button 
             className="btn bg-red-600 text-white hover:bg-red-700"
             onClick={handleGerarProposta}
@@ -381,6 +392,39 @@ export const AdicionarSimulacao = () => {
             Limpar
         </button>
       </div>
+
+      {/* --- MODAL DE EXPORTAÇÃO (NOVO V3.27.2) --- */}
+      {showModal && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-xl p-6">
+            <div className="flex justify-between items-center border-b pb-3 mb-4">
+              <h3 className="text-lg font-bold text-gray-800">Proposta Gerada (Dados JSON)</h3>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            
+            <p className="text-sm text-gray-600 mb-3">Estes são os dados estruturados da proposta, prontos para exportação.</p>
+            
+            <textarea
+              readOnly
+              className="w-full h-64 p-3 border rounded-lg bg-gray-50 text-xs font-mono resize-none"
+              value={JSON.stringify(exportData, null, 2)}
+            />
+            
+            <div className="mt-4 flex justify-end gap-3">
+                {/* BOTÕES FUTUROS DE EXPORTAÇÃO */}
+                <button 
+                    onClick={() => { navigator.clipboard.writeText(JSON.stringify(exportData, null, 2)); alert('Dados copiados para a área de transferência!'); }}
+                    className="btn-secondary"
+                >
+                    Copiar JSON
+                </button>
+                <button onClick={() => setShowModal(false)} className="btn-primary">
+                    Fechar
+                </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </Accordion>
   );
