@@ -4,15 +4,24 @@ import { useSimulador } from '../context/SimuladorProvider';
 const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
 
 export const CenarioCard = ({ cenario }) => {
-  const { removerCenario } = useSimulador();
+  // Conexão: Importando as funções de gerenciamento de cenários
+  const { removerCenario, editarCenario, duplicarCenario } = useSimulador(); 
   const [verDetalhes, setVerDetalhes] = useState(false);
   
   const { nome, preview } = cenario;
 
+  // Variáveis para exibição de multi-cotas (Total e Unitário)
+  const qtdCotas = cenario.inputs.quantidadeCotas || 1; // Deve vir do input salvo
+  const valorCreditoTotal = preview.creditoContratado; // Já é o valor total (multiplicado)
+  const valorCreditoUnitario = preview.creditoUnitario || preview.creditoContratado; // Novo valor unitário (fallback para o total se não existir)
+
   return (
     <div className="bg-white rounded-lg shadow-md p-4 flex flex-col gap-3 border border-gray-200">
-      <div className="flex justify-between items-center">
-        <p className="font-bold text-gray-700">Grupo: {cenario.inputs.grupoNo}</p>
+      <div className="flex justify-between items-start">
+        {/* CABEÇALHO APRIMORADO: Exibe Grupo e Qtd. de Cotas */}
+        <p className="font-bold text-gray-700">
+          Grupo: {cenario.inputs.grupoNo}{qtdCotas > 1 && <span className="ml-2 text-sm text-gray-500">({qtdCotas} cotas)</span>}
+        </p>
         <button 
           onClick={() => removerCenario(cenario.id)} 
           className="text-gray-400 hover:text-red-600 text-2xl font-bold"
@@ -20,29 +29,47 @@ export const CenarioCard = ({ cenario }) => {
           &times;
         </button>
       </div>
+      
+      {/* CRÉDITO CONTRATADO: Exibe Total e Unitário */}
       <h3 className="font-bold text-xl text-green-600 -mt-3">
-        CRÉDITO: {formatCurrency(preview.creditoContratado)}
+        CRÉDITO: {formatCurrency(valorCreditoUnitario)}
+        {qtdCotas > 1 && <span className="ml-2 text-sm text-gray-500">(Total: {formatCurrency(valorCreditoTotal)})</span>}
       </h3>
 
       <div className="grid grid-cols-2 gap-3">
+        {/* CRÉDITO LÍQUIDO */}
         <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-          <label className="text-xs font-medium text-green-800">CRÉDITO LÍQUIDO</label>
+          <label className="text-xs font-medium text-green-800">CRÉDITO LÍQUIDO (Total)</label>
           <p className="text-xl font-bold text-green-800">{formatCurrency(preview.creditoLiquido)}</p>
+          {/* Adiciona valor Líquido por cota se for multi-cota */}
+          {qtdCotas > 1 && (
+            <span className="text-xs text-green-600">
+              Por cota: {formatCurrency(preview.creditoLiquido / qtdCotas)}
+            </span>
+          )}
         </div>
+        {/* PARCELA PRÉ */}
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-          <label className="text-xs font-medium text-gray-600">PARCELA PRÉ</label>
+          <label className="text-xs font-medium text-gray-600">PARCELA PRÉ {qtdCotas > 1 && '(Total)'}</label>
           <p className="text-xl font-bold text-gray-800">{formatCurrency(preview.parcelaPre.valor)}</p>
           <span className="text-xs text-gray-500 truncate" title={preview.parcelaPre.detalhes}>{preview.parcelaPre.detalhes}</span>
         </div>
+        {/* LANCE BOLSO */}
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-          <label className="text-xs font-medium text-orange-800">LANCE BOLSO</label>
+          <label className="text-xs font-medium text-orange-800">LANCE BOLSO (Total)</label>
           <p className="text-xl font-bold text-orange-800">{formatCurrency(preview.lanceBolso)}</p>
           <span className="text-xs text-orange-600">
             {((preview.lanceBolso / preview.creditoLiquido) * 100 || 0).toFixed(1)}% do líquido
           </span>
+          {qtdCotas > 1 && (
+            <span className="text-xs text-orange-600 block">
+              Por cota: {formatCurrency(preview.lanceBolso / qtdCotas)}
+            </span>
+          )}
         </div>
+        {/* PARCELA PÓS */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <label className="text-xs font-medium text-blue-800">PARCELA PÓS</label>
+          <label className="text-xs font-medium text-blue-800">PARCELA PÓS {qtdCotas > 1 && '(Total)'}</label>
           <p className="text-xl font-bold text-blue-800">{formatCurrency(preview.parcelaPos.valor)}</p>
           <span className="text-xs text-blue-600 truncate" title={preview.parcelaPos.detalhes}>{preview.parcelaPos.detalhes}</span>
         </div>
@@ -65,13 +92,30 @@ export const CenarioCard = ({ cenario }) => {
           <strong>Contemplação:</strong><span>{preview.detalhes.contemplacao}</span>
           <strong>Plano:</strong><span>{preview.detalhes.plano}</span>
           <strong>Tipo Parcela:</strong><span>{preview.detalhes.tipoParcela}</span>
+          {/* NOVO DETALHE: Qtd. de Cotas */}
+          {qtdCotas > 1 && <strong>Qtd. Cotas:</strong> && <span>{qtdCotas}</span>} 
         </div>
       )}
 
       <div className="flex flex-col sm:flex-row justify-between gap-2">
+        {/* O "Editar Nome" é melhor ser implementado diretamente no componente. Deixaremos ele sem ação por hora, focando nas lógicas do Provider */}
         <button className="text-sm btn-secondary flex-1">Editar Nome</button>
-        <button className="text-sm btn-secondary flex-1">Editar</button>
-        <button className="text-sm btn-secondary flex-1">Duplicar</button>
+        
+        {/* BOTÃO EDITAR CONECTADO */}
+        <button 
+          onClick={() => editarCenario(cenario.id)} 
+          className="text-sm btn-secondary flex-1"
+        >
+          Editar
+        </button>
+        
+        {/* BOTÃO DUPLICAR CONECTADO */}
+        <button 
+          onClick={() => duplicarCenario(cenario.id)} 
+          className="text-sm btn-secondary flex-1"
+        >
+          Duplicar
+        </button>
       </div>
       
       <div>
