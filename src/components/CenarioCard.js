@@ -11,9 +11,10 @@ export const CenarioCard = ({ cenario }) => {
   const { nome, preview } = cenario;
 
   // Variáveis para exibição de multi-cotas (Total e Unitário)
-  const qtdCotas = cenario.inputs.quantidadeCotas || 1; // Deve vir do input salvo
-  const valorCreditoTotal = preview.creditoContratado; // Já é o valor total (multiplicado)
-  const valorCreditoUnitario = preview.creditoUnitario || preview.creditoContratado; // Novo valor unitário (fallback para o total se não existir)
+  const qtdCotas = cenario.inputs.quantidadeCotas || 1; 
+  const valorCreditoTotal = preview.creditoContratado; 
+  // Usa o valor unitário salvo na V3.26.6, ou o total (se for 1 cota)
+  const valorCreditoUnitario = preview.creditoUnitario || preview.creditoContratado; 
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4 flex flex-col gap-3 border border-gray-200">
@@ -30,10 +31,10 @@ export const CenarioCard = ({ cenario }) => {
         </button>
       </div>
       
-      {/* CRÉDITO CONTRATADO: Exibe Total e Unitário */}
+      {/* CRÉDITO CONTRATADO: PRIORIDADE NO VALOR TOTAL (Inconsistência 1 Corrigida) */}
       <h3 className="font-bold text-xl text-green-600 -mt-3">
-        CRÉDITO: {formatCurrency(valorCreditoUnitario)}
-        {qtdCotas > 1 && <span className="ml-2 text-sm text-gray-500">(Total: {formatCurrency(valorCreditoTotal)})</span>}
+        CRÉDITO: {formatCurrency(valorCreditoTotal)}
+        {qtdCotas > 1 && <span className="ml-2 text-sm text-gray-500">(Por Cota: {formatCurrency(valorCreditoUnitario)})</span>}
       </h3>
 
       <div className="grid grid-cols-2 gap-3">
@@ -41,7 +42,6 @@ export const CenarioCard = ({ cenario }) => {
         <div className="bg-green-50 border border-green-200 rounded-lg p-3">
           <label className="text-xs font-medium text-green-800">CRÉDITO LÍQUIDO (Total)</label>
           <p className="text-xl font-bold text-green-800">{formatCurrency(preview.creditoLiquido)}</p>
-          {/* Adiciona valor Líquido por cota se for multi-cota */}
           {qtdCotas > 1 && (
             <span className="text-xs text-green-600">
               Por cota: {formatCurrency(preview.creditoLiquido / qtdCotas)}
@@ -88,17 +88,22 @@ export const CenarioCard = ({ cenario }) => {
           <strong>Lance Total:</strong><span>{formatCurrency(preview.detalhes.lanceTotal)}</span>
           <strong>Lance Embutido:</strong><span>{formatCurrency(preview.detalhes.lanceEmbutido)}</span>
           <strong>Custo do Furo:</strong><span>{formatCurrency(preview.detalhes.custoDoFuro)}</span>
-          <strong>Prazo:</strong><span>{preview.detalhes.prazo}</span>
+          {/* Prazo deve vir do input original (corrigindo potencial bug de exibição) */}
+          <strong>Prazo:</strong><span>{cenario.inputs.prazoContratado} meses</span>
           <strong>Contemplação:</strong><span>{preview.detalhes.contemplacao}</span>
           <strong>Plano:</strong><span>{preview.detalhes.plano}</span>
-          <strong>Tipo Parcela:</strong><span>{preview.detalhes.tipoParcela}</span>
+          {/* Tipo Parcela: Lendo do input original (Inconsistência 2 Corrigida) */}
+          <strong>Tipo Parcela:</strong><span>{cenario.inputs.tipoParcela}</span> 
           {/* NOVO DETALHE: Qtd. de Cotas */}
-          {qtdCotas > 1 && <strong>Qtd. Cotas:</strong> && <span>{qtdCotas}</span>} 
+          {qtdCotas > 1 && (
+            <>
+              <strong>Qtd. Cotas:</strong><span>{qtdCotas}</span>
+            </>
+          )} 
         </div>
       )}
 
       <div className="flex flex-col sm:flex-row justify-between gap-2">
-        {/* O "Editar Nome" é melhor ser implementado diretamente no componente. Deixaremos ele sem ação por hora, focando nas lógicas do Provider */}
         <button className="text-sm btn-secondary flex-1">Editar Nome</button>
         
         {/* BOTÃO EDITAR CONECTADO */}
